@@ -1,0 +1,28 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+---
+Language: Cpp
+# Force pointers to the type for C++.
+DerivePointerAlignment: false
+PointerAlignment: Left
+AccessModifierOffset: -4
+AlwaysBreakTemplateDeclarations: Yes
+#UseTabStyle: Always
+AllowAllConstructorInitializersOnNextLine: true
+AllowAllArgumentsOnNextLine: false
+AlignAfterOpenBracket: DontAlign
+AllowShortIfStatementsOnASingleLine: WithoutElse
+ColumnLimit: 0
+AlwaysBreakAfterReturnType: None
+ContinuationIndentWidth: 4
+AlignConsecutiveAssignments: Consecutive
+AllowShortFunctionsOnASingleLine: All
+LambdaBodyIndentation: OuterScope
+
+
+RequiresClausePosition: OwnLine
+IndentCaseLabels: false
+
+BraceWrapping:
+    AfterEnum: true
+
