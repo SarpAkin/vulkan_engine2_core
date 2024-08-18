@@ -4,11 +4,13 @@
 
 namespace vke {
 
-VkDevice Resource::device() const {
+VkDevice DeviceGetter::device() const {
     return VulkanContext::get_context()->get_device();
 }
 
+VulkanContext* DeviceGetter::get_context() { return VulkanContext::get_context(); }
+
+
 Resource::Resource() {}
 Resource::~Resource() {}
-VulkanContext* Resource::get_context() { return VulkanContext::get_context(); }
 } // namespace vke

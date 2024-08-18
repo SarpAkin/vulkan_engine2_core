@@ -1,15 +1,23 @@
 #pragma once
 
-#include "fwd.hpp"
 #include "common.hpp" // IWYU pragma: export
+#include "fwd.hpp"
 
 #include <vulkan/vulkan_core.h>
 
 namespace vke {
 
-class Resource {
-public:
+class DeviceGetter {
+protected:
+    VkDevice device() const;
+    static VulkanContext* get_context();
 
+    DeviceGetter()=default;
+    ~DeviceGetter()=default;
+};
+
+class Resource : public DeviceGetter {
+public:
     Resource();
     virtual ~Resource();
 
@@ -19,8 +27,8 @@ public:
     Resource& operator=(Resource&&)      = delete;
 
 protected:
-    VkDevice device() const;
-    static VulkanContext* get_context();
 };
+
+
 
 } // namespace vke
