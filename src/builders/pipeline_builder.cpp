@@ -18,6 +18,11 @@
 
 namespace vke {
 
+void PipelineBuilderBase::set_descriptor_set_layout(int set_index, VkDescriptorSetLayout layout) {
+    m_reflection->set_descriptor_layout(set_index, layout);
+}
+
+
 PipelineBuilderBase::~PipelineBuilderBase() {
     for (auto& shader : m_shader_details) {
         vkDestroyShaderModule(device(), shader.module, nullptr);
@@ -28,7 +33,7 @@ PipelineBuilderBase::PipelineBuilderBase() {
     m_reflection = std::make_unique<PipelineReflection>();
 }
 
-void PipelineBuilderBase::add_shader_stage(u32* spirv_code, usize spirv_len, VkShaderStageFlagBits stage, std::string_view filename) {
+void PipelineBuilderBase::add_shader_stage(const u32* spirv_code, usize spirv_len, VkShaderStageFlagBits stage, std::string_view filename) {
 
     VkShaderModule module = nullptr;
 
@@ -79,6 +84,8 @@ void GPipelineBuilder::set_depth_testing(bool depth_testing) {
         .depthWriteEnable = depth_testing,
         .depthCompareOp   = depth_testing ? VK_COMPARE_OP_LESS_OR_EQUAL : VK_COMPARE_OP_ALWAYS,
     };
+
+    default_depth = false;
 }
 
 GPipelineBuilder::GPipelineBuilder() {

@@ -31,15 +31,17 @@ public:
     void set_shader_compile_defines(std::span<const std::pair<std::string, std::string>> defines) { m_defines = defines; }
 
     // 0 is for auto
-    void add_shader_stage(u32* spirv_code, usize spirv_len, VkShaderStageFlagBits stage = (VkShaderStageFlagBits)0, std::string_view filename = "");
-    void add_shader_stage(std::span<u8> span, VkShaderStageFlagBits stage = (VkShaderStageFlagBits)0, std::string_view filename = "") {
+    void add_shader_stage(const u32* spirv_code, usize spirv_len, VkShaderStageFlagBits stage = (VkShaderStageFlagBits)0, std::string_view filename = "");
+    void add_shader_stage(std::span<const u8> span, VkShaderStageFlagBits stage = (VkShaderStageFlagBits)0, std::string_view filename = "") {
         assert(span.size() % 4 == 0);
-        add_shader_stage(reinterpret_cast<u32*>(span.data()), span.size() / 4, stage, filename);
+        add_shader_stage(reinterpret_cast<const u32*>(span.data()), span.size() / 4, stage, filename);
     }
-    void add_shader_stage(std::span<u32> span, VkShaderStageFlagBits stage = (VkShaderStageFlagBits)0, std::string_view filename = "") { add_shader_stage(span.data(), span.size(), stage, filename); };
+    void add_shader_stage(std::span<const u32> span, VkShaderStageFlagBits stage = (VkShaderStageFlagBits)0, std::string_view filename = "") { add_shader_stage(span.data(), span.size(), stage, filename); };
     void add_shader_stage(std::string_view spirv_path);
     void set_layout_builder(PipelineLayoutBuilder* builder) { m_layout_builder = builder; }
     void set_pipeline_cache(VkPipelineCache cache) { m_pipeline_cache = cache; }
+
+    void set_descriptor_set_layout(int set_index, VkDescriptorSetLayout layout);
 
     const PipelineReflection* get_reflection() const { return m_reflection.get(); };
 
@@ -48,7 +50,7 @@ protected:
     std::unique_ptr<PipelineReflection> m_reflection;
 
     struct ShaderDetails {
-        u32* spirv_code;
+        const u32* spirv_code;
         u32 spirv_len;
         VkShaderStageFlagBits stage;
         VkShaderModule module;
