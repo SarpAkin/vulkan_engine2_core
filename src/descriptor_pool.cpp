@@ -60,7 +60,9 @@ void DescriptorPool::next_pool() {
 }
 
 void DescriptorPool::reset() {
-    VK_CHECK(vkResetDescriptorPool(device(), m_current_pool, 0));
+    if (m_current_pool) {
+        VK_CHECK(vkResetDescriptorPool(device(), m_current_pool, 0));
+    }
 
     for (auto pool : m_used_pools) {
         VK_CHECK(vkResetDescriptorPool(device(), pool, 0));
