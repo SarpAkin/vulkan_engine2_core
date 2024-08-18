@@ -26,6 +26,8 @@ public:
 
     virtual std::span<u8> mapped_data_bytes() = 0;
 
+    VkDeviceSize device_address()const;
+
     template <typename T>
     std::span<T> mapped_data() {
         auto bytes = mapped_data_bytes();
@@ -62,7 +64,7 @@ private:
     Buffer* vke_buffer() override { return this; }
     const Buffer* vke_buffer() const override { return this; }
 
-private:
+protected:
     VkBuffer m_buffer;
     VmaAllocation m_allocation;
     void* m_mapped_data      = nullptr;

@@ -22,6 +22,8 @@ Buffer::Buffer(VkBufferUsageFlags usage, usize buffer_size, bool host_visible) {
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
 
+
+
     VK_CHECK(vmaCreateBuffer(get_context()->gpu_allocator(), &create_info, &alloc_info, &m_buffer, &m_allocation, nullptr));
     vmaSetAllocationName(get_context()->gpu_allocator(), m_allocation, "image");
 
@@ -43,4 +45,12 @@ BufferSpan IBufferSpan::subspan(usize _byte_offset, usize _byte_size) {
     return BufferSpan(vke_buffer(), byte_offset() + _byte_offset, std::min(_byte_size, byte_size() - _byte_offset));
 }
 
+VkDeviceSize IBufferSpan::device_address() const {
+    VkBufferDeviceAddressInfo info = {
+        .sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+        .buffer = handle(),
+    };
+
+    return vkGetBufferDeviceAddress(vke::VulkanContext::get_context()->get_device(), &info) + byte_offset();
+} // namespace vke
 } // namespace vke
