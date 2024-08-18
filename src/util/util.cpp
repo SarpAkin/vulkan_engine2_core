@@ -6,6 +6,8 @@
 #include <iterator>
 #include <vector>
 
+#include <execinfo.h>
+
 #include "arena_alloc.hpp"
 
 std::vector<u8> read_file_binary(const char* name) {
@@ -68,3 +70,17 @@ std::string_view read_file(vke::ArenaAllocator* arena, const char* name) {
     file.read(reinterpret_cast<char*>(data), filesize);
     return std::string_view(data, filesize);
 }
+
+
+void trace_stack(){
+    void *buffer[100];
+    int nptrs;
+
+    // Get the array of return addresses
+    nptrs = backtrace(buffer, sizeof(buffer) / sizeof(void*));
+
+    // Print out all the frames to stderr
+    fprintf(stderr, "Stack trace:\n");
+    backtrace_symbols_fd(buffer, nptrs, fileno(stderr));
+}
+
