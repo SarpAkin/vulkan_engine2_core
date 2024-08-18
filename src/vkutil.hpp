@@ -2,11 +2,12 @@
 
 #include <cassert>
 #include <cstdio>
+#include <string>
 
 #include <vulkan/vulkan_core.h>
 
 namespace vke {
-const char* vk_result_string(VkResult res);
+std::string vk_result_string(VkResult res);
 
 bool is_depth_format(VkFormat format);
 
@@ -17,7 +18,7 @@ bool is_depth_format(VkFormat format);
     {                                                                                  \
         VkResult result = x;                                                           \
         if (result != VK_SUCCESS) {                                                    \
-            fprintf(stderr, "[Vulkan Error]: %s\n", vke::vk_result_string(result)); \
+            fprintf(stderr, "[Vulkan Error]: %s\n", vke::vk_result_string(result).c_str()); \
             assert(0);                                                                 \
         }                                                                              \
     }
