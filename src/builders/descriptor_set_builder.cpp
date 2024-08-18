@@ -2,24 +2,26 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../fwd.hpp"
-#include "../util.hpp"
+#include "../vulkan_context.hpp"
 
-#include "buffer.hpp"
-#include "descriptor_pool.hpp"
-#include "image.hpp"
+#include "../fwd.hpp"
+#include "../util/util.hpp"
+
+#include "../buffer.hpp"
+#include "../descriptor_pool.hpp"
+#include "../image.hpp"
 
 namespace vke {
 
 DescriptorSetBuilder& DescriptorSetBuilder::add_buffers(std::span<IBufferSpan*> buffers, VkShaderStageFlags stage, VkDescriptorType type) {
     m_buffer_bindings.push_back(BufferBinding{
         .buffer_infos = map_vec(buffers, [&](IBufferSpan* buffer) {
-            return VkDescriptorBufferInfo{
-                .buffer = buffer->handle(),
-                .offset = buffer->byte_offset(),
-                .range  = buffer->byte_size(),
-            };
-        }),
+        return VkDescriptorBufferInfo{
+            .buffer = buffer->handle(),
+            .offset = buffer->byte_offset(),
+            .range  = buffer->byte_size(),
+        };
+    }),
         .binding      = m_binding_counter++,
         .type         = type,
     });
@@ -30,12 +32,12 @@ DescriptorSetBuilder& DescriptorSetBuilder::add_buffers(std::span<IBufferSpan*> 
 DescriptorSetBuilder& DescriptorSetBuilder::add_images(std::span<IImageView*> images, VkImageLayout layout, VkSampler sampler, VkShaderStageFlags stage, VkDescriptorType type) {
     m_image_bindings.push_back(ImageBinding{
         .image_infos = map_vec(images, [&](IImageView* image) {
-            return VkDescriptorImageInfo{
-                .sampler     = sampler,
-                .imageView   = image->view(),
-                .imageLayout = layout,
-            };
-        }),
+        return VkDescriptorImageInfo{
+            .sampler     = sampler,
+            .imageView   = image->view(),
+            .imageLayout = layout,
+        };
+    }),
         .binding     = m_binding_counter++,
         .type        = type,
     });
@@ -72,14 +74,14 @@ VkDescriptorSet DescriptorSetBuilder::build(DescriptorPool* pool, VkDescriptorSe
         });
     }
 
-    vkUpdateDescriptorSets(pool->device(), writes.size(), writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(VulkanContext::get_context()->get_device(), writes.size(), writes.data(), 0, nullptr);
 
     return set;
 }
 
 DescriptorSetBuilder& DescriptorSetBuilder::add_image_samplers(std::span<Image*> images, VkImageLayout layout, VkSampler sampler, VkShaderStageFlags stage) {
 
-    auto span = MAP_VEC_ALLOCA(images, [](Image* image) { return static_cast<IImageView*>(image); }); 
+    auto span = MAP_VEC_ALLOCA(images, [](Image* image) { return static_cast<IImageView*>(image); });
 
     return add_images(span, layout, sampler, stage, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 }
