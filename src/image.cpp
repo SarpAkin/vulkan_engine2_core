@@ -112,7 +112,7 @@ std::unique_ptr<Image> Image::buffer_to_image(CommandBuffer& cmd, IBufferSpan* b
 }
 
 void Image::copy_from_buffer(CommandBuffer& cmd, std::span<const CopyFromBufferArgs> vargs) {
-    auto queue = VulkanContext::get_context()->gegraphics_queue_family();
+    auto queue = VulkanContext::get_context()->get_graphics_queue_family();
 
     auto barriers = MAP_VEC_ALLOCA(vargs, [&](const CopyFromBufferArgs& args) {
         return VkImageMemoryBarrier{

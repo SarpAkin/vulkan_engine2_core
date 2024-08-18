@@ -20,7 +20,7 @@ CommandBuffer::CommandBuffer(bool is_primary, int queue_index) {
     VkCommandPoolCreateInfo p_info{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-        .queueFamilyIndex = queue_index == -1 ? VulkanContext::get_context()->gegraphics_queue_family() : static_cast<u32>(queue_index),
+        .queueFamilyIndex = queue_index == -1 ? VulkanContext::get_context()->get_graphics_queue_family() : static_cast<u32>(queue_index),
     };
 
     VK_CHECK(vkCreateCommandPool(device(), &p_info, nullptr, &m_cmd_pool));

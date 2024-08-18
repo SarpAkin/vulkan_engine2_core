@@ -25,7 +25,7 @@ public:
     ~VulkanContext();
 
     VkQueue get_graphics_queue() { return m_graphics_queue; }
-    u32 gegraphics_queue_family() { return m_graphics_queue_family; }
+    u32 get_graphics_queue_family() { return m_graphics_queue_family; }
 
 private:
     void init_vma_allocator();
