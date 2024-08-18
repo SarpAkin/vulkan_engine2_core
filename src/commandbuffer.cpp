@@ -55,7 +55,17 @@ void CommandBuffer::end() {
 
 void CommandBuffer::reset() {
     VK_CHECK(vkResetCommandBuffer(m_cmd, 0));
+    m_current_pipeline = nullptr;
+    m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
+
+    m_wait_semaphores.clear();
+    m_dependent_resources.clear();
 }
+
+std::span<VkSemaphore> CommandBuffer::get_wait_semaphores() {
+    return m_wait_semaphores;
+}
+
 
 // VkCmd** wrappers
 void CommandBuffer::cmd_begin_renderpass(const VkRenderPassBeginInfo* pRenderPassBegin, VkSubpassContents contents) {
@@ -73,9 +83,15 @@ void CommandBuffer::cmd_end_renderpass() {
 }
 
 void CommandBuffer::bind_pipeline(Pipeline* pipeline) {
+    if(m_current_pipeline == pipeline) return;
+
     m_current_pipeline = pipeline;
 
-    vkCmdBindPipeline(handle(), m_current_pipeline_state, pipeline->handle());
+    if(pipeline->bindpoint() != m_current_pipeline_state){
+        LOG_WARNING("bindpoint mismatch\n");
+    }
+
+    vkCmdBindPipeline(handle(), pipeline->bindpoint(), pipeline->handle());
 }
 
 void CommandBuffer::bind_vertex_buffer(const std::initializer_list<const IBufferSpan*>& buffer) {
@@ -128,8 +144,16 @@ void CommandBuffer::draw_indexed_indirect_count(const IBufferSpan* drawcall_buff
         count_buffer->handle(), count_buffer->byte_offset(), max_draw_count, stride);
 }
 
+static PFN_vkCmdDrawMeshTasksEXT _vkCmdDrawMeshTasksEXT = nullptr;
 void CommandBuffer::draw_mesh_tasks(u32 group_count_x, u32 group_count_y, u32 group_count_z) {
-    vkCmdDrawMeshTasksEXT(handle(), group_count_x, group_count_y, group_count_z);
+    if (_vkCmdDrawMeshTasksEXT == nullptr) {
+        _vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(device(), "vkCmdDrawMeshTasksEXT");
+        assert(_vkCmdDrawMeshTasksEXT && "vkCmdDrawMeshTasksEXT not available");
+    }
+
+    _vkCmdDrawMeshTasksEXT(handle(), group_count_x, group_count_y, group_count_z);
+
+    // vkCmdDrawMeshTasksEXT(handle(), group_count_x, group_count_y, group_count_z);
 }
 void CommandBuffer::draw_mesh_tasks_indirect(const IBufferSpan* buffer, u32 draw_count, u32 stride) {
     vkCmdDrawMeshTasksIndirectEXT(handle(), buffer->handle(), buffer->byte_offset(), draw_count, stride);
@@ -140,6 +164,8 @@ void CommandBuffer::draw_mesh_tasks_indirect_count(const IBufferSpan* buffer, co
 }
 
 void CommandBuffer::dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z) {
+    printf("vulkan dispatch: %d %d %d\n",group_count_x,group_count_y,group_count_z);
+
     vkCmdDispatch(handle(), group_count_x, group_count_y, group_count_z);
 }
 
@@ -210,10 +236,16 @@ void CommandBuffer::execute_secondries(std::span<const CommandBuffer*> cmds) {
     vkCmdExecuteCommands(handle(), handles.size(), handles.data());
 }
 
-CommandBuffer::CommandBuffer(VkCommandBuffer cmd, bool is_primary) {
+CommandBuffer::CommandBuffer(VkCommandBuffer cmd,bool is_renderpass, bool is_primary) {
     m_cmd         = cmd;
     m_cmd_pool    = nullptr;
     m_is_external = true;
+
+    if(is_renderpass) {
+        m_current_pipeline_state = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    }else{
+        m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
+    }
 }
 
 } // namespace vke

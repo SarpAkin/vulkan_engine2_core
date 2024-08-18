@@ -26,7 +26,7 @@ public:
     friend Fence;
 
     CommandBuffer(bool is_primary = true, int queue_family_index = -1);
-    CommandBuffer(VkCommandBuffer cmd, bool is_primary = false);
+    CommandBuffer(VkCommandBuffer cmd,bool is_renderpass = false, bool is_primary = false);
 
     ~CommandBuffer();
 
@@ -38,6 +38,8 @@ public:
     void begin();
     void end();
     void reset();
+
+    std::span<VkSemaphore> get_wait_semaphores();
 
     void begin_secondry();
     // void begin_secondry(Renderpass* renderpass, u32 subpass);
@@ -99,6 +101,7 @@ private:
     bool m_is_external = false;
 
     std::vector<std::unique_ptr<Resource>> m_dependent_resources;
+    std::vector<VkSemaphore> m_wait_semaphores;
 
     VkPipelineBindPoint m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
     Pipeline* m_current_pipeline                 = nullptr;
