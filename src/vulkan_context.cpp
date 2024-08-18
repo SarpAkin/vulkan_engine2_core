@@ -42,6 +42,7 @@ void VulkanContext::init_vma_allocator() {
     };
 
     VmaAllocatorCreateInfo create_info{
+        .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
         .physicalDevice   = m_physical_device,
         .device           = m_device,
         .pVulkanFunctions = &vulkan_functions,
@@ -75,6 +76,7 @@ void VulkanContext::init_queues() {
 
     // Initialize the graphics queue
     vkGetDeviceQueue(m_device, graphicsFamily, 0, &m_graphics_queue);
+    m_graphics_queue_family = graphicsFamily;
 }
 
 void VulkanContext::cleanup_conext() { delete s_context; }
