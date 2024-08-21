@@ -1,6 +1,5 @@
 #include "commandbuffer.hpp"
 
-#include <alloca.h>
 #include <cassert>
 #include <initializer_list>
 #include <vulkan/vulkan_core.h>

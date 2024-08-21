@@ -6,7 +6,9 @@
 #include <iterator>
 #include <vector>
 
+#ifndef _WIN32
 #include <execinfo.h>
+#endif
 
 #include "arena_alloc.hpp"
 
@@ -41,7 +43,7 @@ std::string read_file(const char* name) {
 
 std::string relative_path_impl(const char* source_path, const char* path) {
     std::filesystem::path p = source_path;
-    return p.parent_path() / path;
+    return (p.parent_path() / path).string();
 }
 
 std::span<u8> read_file_binary(vke::ArenaAllocator* arena, const char* name) {
@@ -73,6 +75,7 @@ std::string_view read_file(vke::ArenaAllocator* arena, const char* name) {
 
 
 void trace_stack(){
+#ifndef _WIN32
     void *buffer[100];
     int nptrs;
 
@@ -82,5 +85,6 @@ void trace_stack(){
     // Print out all the frames to stderr
     fprintf(stderr, "Stack trace:\n");
     backtrace_symbols_fd(buffer, nptrs, fileno(stderr));
+#endif
 }
 
