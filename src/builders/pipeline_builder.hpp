@@ -4,6 +4,7 @@
 #include <memory>
 #include <span>
 #include <vector>
+#include <string>
 #include <vulkan/vulkan_core.h>
 
 #include "../common.hpp"

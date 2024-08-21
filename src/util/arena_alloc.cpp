@@ -1,6 +1,11 @@
 #include "arena_alloc.hpp"
 
+
+#ifndef _WIN32
 #include <sys/mman.h>
+#else
+#include <Windows.h>
+#endif
 
 // 4GB
 const usize HEAP_SIZE = 1l << 32;
@@ -8,13 +13,23 @@ const usize HEAP_SIZE = 1l << 32;
 namespace vke {
 
 ArenaAllocator::ArenaAllocator() {
+#ifndef _WIN32
     m_base = reinterpret_cast<u8*>(mmap(nullptr, HEAP_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+#else
+    m_base = reinterpret_cast<u8*>(VirtualAlloc(nullptr, HEAP_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
+
+#endif
+    
     m_top  = m_base;
     m_cap  = m_base + HEAP_SIZE;
 }
 
 ArenaAllocator::~ArenaAllocator() {
+#ifndef _WIN32
     munmap(m_base, HEAP_SIZE);
+#else
+    VirtualFree(m_base, 0, MEM_RELEASE);
+#endif
 }
 
 void* ArenaAllocator::alloc(usize size) {

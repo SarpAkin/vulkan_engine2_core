@@ -1,5 +1,14 @@
 #pragma once
 
+#ifndef _WIN32
+#include <alloca.h>
+#else
+#include <malloc.h>
+#define alloca(x) _alloca(x)
+
+#endif
+
+
 #include <cassert>
 #include <cstdio>
 #include <string>

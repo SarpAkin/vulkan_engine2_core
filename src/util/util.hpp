@@ -1,6 +1,15 @@
 #pragma once
 
+#ifndef _WIN32
 #include <alloca.h>
+#else
+#include <malloc.h>
+#ifndef alloca
+#define alloca(x) _alloca(x)
+#endif
+
+#endif
+
 #include <cassert>
 #include <optional>
 #include <span>
@@ -16,7 +25,7 @@
 namespace vke {
 class ArenaAllocator;
 
-auto map_vec(auto&& vector, auto&& f) -> std::vector<decltype(f(*vector.begin()))> {
+auto map_vec(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin()))> results;
     results.reserve(vector.size());
     for (const auto& element : vector) {
@@ -26,7 +35,7 @@ auto map_vec(auto&& vector, auto&& f) -> std::vector<decltype(f(*vector.begin())
     return results;
 }
 
-auto map_vec_indicies(auto&& vector, auto&& f) -> std::vector<decltype(f(*vector.begin(), 0))> {
+auto map_vec_indicies(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin(), 0))> results;
     results.reserve(vector.size());
     int i = 0;
@@ -85,15 +94,20 @@ std::string relative_path_impl(const char* source_path, const char* path);
 
 // returns an std::span allocated from alloca
 // WARNING IT DOESN'T CALL DESTRUCTOR
-#define MAP_VEC_ALLOCA(vector, f...) ({                                   \
+#define MAP_VEC_ALLOCA(vector, ...) [&]{                                  \
+    auto&& f = __VA_ARGS__;\
     using T    = decltype(f(*vector.begin()));                            \
     T* results = reinterpret_cast<T*>(alloca(sizeof(T) * vector.size())); \
     T* it      = results;                                                 \
     for (auto& element : vector) {                                        \
-        *(it++) = f(element);                                             \
+        *(it++) = f (element);                                             \
     }                                                                     \
-    std::span(results, it);                                               \
-})
+    return std::span(results, it);                                               \
+}()
+
+#ifndef __PRETTY_FUNCTION__
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 
 #define RELATIVE_PATH(path) relative_path_impl(__FILE__, path)
 
@@ -109,10 +123,26 @@ std::string relative_path_impl(const char* source_path, const char* path);
 #define TOSTRING(x) STRINGIFY(x)
 #define HELPER_MACRO(x) x
 
+#ifndef _WIN32
 #define LOG_INFO(fmt, ...) printf(ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_RESET "[INFO] " fmt "\n" __VA_OPT__(, ) __VA_ARGS__)
 
 #define LOG_ERROR(fmt, ...) fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "][%s]" ANSI_COLOR_RED "[ERROR] " fmt ANSI_COLOR_RESET "\n", __PRETTY_FUNCTION__ __VA_OPT__(, ) __VA_ARGS__)
 #define LOG_WARNING(fmt, ...) fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "][%s]" ANSI_COLOR_YELLOW "[WARNING] " fmt ANSI_COLOR_RESET "\n", __PRETTY_FUNCTION__ __VA_OPT__(, ) __VA_ARGS__)
+#else
+#define LOG_INFO(...) printf(ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_RESET "[INFO] "  __VA_ARGS__);printf("\n");
+
+#define LOG_ERROR(fmt, ...)                                                                                                   \
+    fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_RED "[ERROR] " __VA_ARGS__); \
+    fprintf(stderr ,ANSI_COLOR_RESET "\n ", );
+
+
+#define LOG_WARNING(fmt, ...)                                                                                          \
+    fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_YELLOW "[WARNING] " __VA_ARGS__); \
+    fprintf(stderr,ANSI_COLOR_RESET "\n");
+
+#endif // !_WIN32
+
+
 
 #define THROW_ERROR(fmt, ...)                                                                                                                 \
     {                                                                                                                                         \
