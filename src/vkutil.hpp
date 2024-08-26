@@ -4,8 +4,9 @@
 #include <alloca.h>
 #else
 #include <malloc.h>
+#ifndef alloca
 #define alloca(x) _alloca(x)
-
+#endif
 #endif
 
 

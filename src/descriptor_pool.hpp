@@ -39,7 +39,7 @@ public:
 
 private:
     std::vector<VkDescriptorPool> m_free_pools, m_used_pools;
-    VkDescriptorPool m_current_pool = nullptr;
+    VkDescriptorPool m_current_pool = VK_NULL_HANDLE;
 
     void next_pool();
 };

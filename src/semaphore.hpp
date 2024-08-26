@@ -13,7 +13,7 @@ public:
     ~Semaphore();
 
 private:
-    VkSemaphore m_semaphore = nullptr;
+    VkSemaphore m_semaphore = VK_NULL_HANDLE;
 };
 
 

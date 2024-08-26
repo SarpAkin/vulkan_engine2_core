@@ -28,14 +28,14 @@ VkDescriptorSet DescriptorPool::allocate_set(VkDescriptorSetLayout layout) {
     } else {
         VK_CHECK(result);
     }
-    return nullptr;
+    return VK_NULL_HANDLE;
 }
 
 void DescriptorPool::next_pool() {
 
     if (m_current_pool) m_used_pools.push_back(m_current_pool);
 
-    m_current_pool = nullptr;
+    m_current_pool = VK_NULL_HANDLE;
 
     if (m_free_pools.size()) {
         m_current_pool = m_free_pools.back();

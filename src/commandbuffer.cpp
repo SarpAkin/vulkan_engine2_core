@@ -237,7 +237,7 @@ void CommandBuffer::execute_secondries(std::span<const CommandBuffer*> cmds) {
 
 CommandBuffer::CommandBuffer(VkCommandBuffer cmd,bool is_renderpass, bool is_primary) {
     m_cmd         = cmd;
-    m_cmd_pool    = nullptr;
+    m_cmd_pool    = VK_NULL_HANDLE;
     m_is_external = true;
 
     if(is_renderpass) {

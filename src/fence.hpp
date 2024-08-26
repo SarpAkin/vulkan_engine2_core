@@ -13,7 +13,7 @@ public:
     ~Fence();
 
 private:
-    VkFence m_fence = nullptr;
+    VkFence m_fence = VK_NULL_HANDLE;
 };
 
 

@@ -61,7 +61,7 @@ protected:
     std::vector<ShaderDetails> m_shader_details;
     PipelineLayoutBuilder* m_layout_builder;
     std::unique_ptr<PipelineLayoutBuilder> m_owned_builder;
-    VkPipelineCache m_pipeline_cache = nullptr;
+    VkPipelineCache m_pipeline_cache = VK_NULL_HANDLE;
 
     ArenaAllocator m_arena;
 };
@@ -86,7 +86,7 @@ private:
     void set_opaque_color_blend();
 
     const VertexInputDescriptionBuilder* m_input_description_builder = nullptr;
-    VkRenderPass m_renderpass                                        = nullptr;
+    VkRenderPass m_renderpass                                        = VK_NULL_HANDLE;
     u32 m_subpass_index                                              = 0;
     u32 m_attachment_count                                           = 0;
     bool default_depth                                               = true;

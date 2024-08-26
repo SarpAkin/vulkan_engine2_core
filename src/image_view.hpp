@@ -21,7 +21,7 @@ public:
     VkImageViewType view_type() const override { return m_view_type; }
 
 private:
-    VkImageView m_view = nullptr;
+    VkImageView m_view = VK_NULL_HANDLE;
     Image* m_vke_image;
     VkImageSubresourceRange m_subresource_range;
     VkImageViewType m_view_type;
