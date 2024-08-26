@@ -35,7 +35,7 @@ PipelineBuilderBase::PipelineBuilderBase() {
 
 void PipelineBuilderBase::add_shader_stage(const u32* spirv_code, usize spirv_len, VkShaderStageFlagBits stage, std::string_view filename) {
 
-    VkShaderModule module = nullptr;
+    VkShaderModule module = VK_NULL_HANDLE;
 
     auto reflected_stage = m_reflection->add_shader_stage(std::span(spirv_code, spirv_len));
 
@@ -71,7 +71,7 @@ void GPipelineBuilder::set_rasterization(VkPolygonMode polygon_mode, VkCullModeF
     m_rasterizer = {
         .sType       = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
         .polygonMode = polygon_mode,
-        .cullMode    = cull_mode,
+        .cullMode    = static_cast<VkCullModeFlags>(cull_mode),
         .frontFace   = VK_FRONT_FACE_CLOCKWISE,
         .lineWidth   = 1.f,
     };
@@ -181,7 +181,7 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
         .layout              = layouts.layout,
         .renderPass          = m_renderpass,
         .subpass             = m_subpass_index,
-        .basePipelineHandle  = nullptr,
+        .basePipelineHandle  = VK_NULL_HANDLE,
     };
 
     if (is_mesh_shader) {
@@ -259,7 +259,7 @@ void PipelineBuilderBase::add_shader_stage(std::string_view spirv_path) {
         // this->add_shader_stage(binary, VkShaderStageFlagBits(0), spirv_path);
 
     } else {
-        auto binary = read_file_binary(&m_arena, spirv_path.begin());
+        auto binary = read_file_binary(&m_arena, spirv_path.data());
         this->add_shader_stage(binary, VkShaderStageFlagBits(0), spirv_path);
     }
 }

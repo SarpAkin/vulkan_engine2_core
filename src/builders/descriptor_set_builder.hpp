@@ -31,7 +31,7 @@ public:
 
     inline DescriptorSetBuilder& add_storage_image(IImageView* image, VkImageLayout layout, VkShaderStageFlags stage) {
         IImageView* images[] = {image};
-        return add_images(images, layout, nullptr, stage, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+        return add_images(images, layout, VK_NULL_HANDLE, stage, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     }
 
     VkDescriptorSet build(DescriptorPool* pool, VkDescriptorSetLayout layout);
