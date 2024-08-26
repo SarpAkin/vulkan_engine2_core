@@ -18,12 +18,13 @@ protected:
     ~DeviceGetter() = default;
 };
 
-template <class T>
+template<typename T>
 class RCResource;
+
 
 class Resource : public DeviceGetter {
     template<typename T>
-    friend class RCResource<T>;
+    friend class RCResource;
 
 public:
     Resource();
