@@ -28,7 +28,7 @@ target_link_libraries(vke PUBLIC
 
 )
 
-
+find_package(cereal)
 
 target_include_directories(vke PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/libs/ ${VKE_INCLUDE})
 target_include_directories(vke INTERFACE ${VKE_INCLUDE})
