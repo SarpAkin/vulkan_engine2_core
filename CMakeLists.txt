@@ -20,7 +20,8 @@ add_library(vke
     ${LIB_CPPS}
 )
 
-target_compile_options(vke PUBLIC -fPIC)
+# Set position-independent code for the target
+set_target_properties(vke PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(vke PUBLIC
     ${Vulkan_LIBRARIES}
@@ -29,7 +30,7 @@ target_link_libraries(vke PUBLIC
 
 
 
-target_include_directories(vke PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/libs/)
+target_include_directories(vke PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/libs/ ${VKE_INCLUDE})
 target_include_directories(vke INTERFACE ${VKE_INCLUDE})
 
 # target_compile_options(vke PUBLIC
