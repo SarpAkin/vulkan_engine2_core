@@ -12,6 +12,8 @@
 
 namespace vke {
 
+class IPipeline;
+
 struct PipelineBarrierArgs {
     VkPipelineStageFlags src_stage_mask, dst_stage_mask;
     // VK_DEPENDENCY_DEVICE_GROUP_BIT by default
@@ -56,7 +58,7 @@ public:
     // void next_subpass(VkSubpassContents contents) { cmd_next_subpass(contents); };
     // void end_renderpass() { cmd_end_renderpass(); }
 
-    void bind_pipeline(Pipeline* pipeline);
+    void bind_pipeline(IPipeline* pipeline);
     void bind_index_buffer(const IBufferSpan* buffer, VkIndexType index_type = VK_INDEX_TYPE_UINT16);
     void bind_index_buffer(const IBufferSpan& buffer, VkIndexType index_type = VK_INDEX_TYPE_UINT16) { bind_index_buffer(&buffer, index_type); }
 
@@ -104,7 +106,7 @@ private:
     std::vector<VkSemaphore> m_wait_semaphores;
 
     VkPipelineBindPoint m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
-    Pipeline* m_current_pipeline                 = nullptr;
+    IPipeline* m_current_pipeline                 = nullptr;
 };
 
 } // namespace vke
