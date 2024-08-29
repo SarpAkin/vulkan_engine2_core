@@ -6,6 +6,7 @@
 
 #include "common.hpp"
 #include "fwd.hpp"
+#include "pipeline/ipipeline.hpp"
 #include "vk_resource.hpp"
 
 namespace vke {
@@ -14,7 +15,7 @@ class GPipelineBuilder;
 class CPipelineBuilder;
 class PipelineReflection;
 
-class Pipeline : public Resource {
+class Pipeline : public IPipeline {
     friend GPipelineBuilder;
     friend CPipelineBuilder;
 
@@ -27,9 +28,14 @@ public:
     Pipeline(VkPipeline pipeline, VkPipelineLayout layout, VkPipelineBindPoint bindpoint);
     ~Pipeline();
 
-    VkPipeline handle() const { return m_pipeline; }
+    VkPipeline handle() override { return m_pipeline; }
     VkPipelineLayout layout() const { return m_layout; }
-    VkPipelineBindPoint bindpoint() const { return m_bindpoint; }
+    // VkPipelineBindPoint bindpoint() const { return m_bindpoint; }
+    VkPipelineBindPoint bind_point() override { return m_bindpoint; }
+
+    VkPipelineLayout layout() override {return m_layout;}
+    VkShaderStageFlagBits push_stages() override {return m_data.push_stages;}
+    VkDescriptorSetLayout set_layout(u32 index) override {return m_data.dset_layouts[index];}
 
     const PipelineData& data() const { return m_data; }
     VkDescriptorSetLayout get_descriptor_layout(u32 index) const { return m_data.dset_layouts[index]; }
