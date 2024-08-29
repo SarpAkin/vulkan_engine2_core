@@ -105,7 +105,7 @@ std::string relative_path_impl(const char* source_path, const char* path);
     return std::span(results, it);                                               \
 }()
 
-#ifndef __PRETTY_FUNCTION__
+#ifdef _WIN32
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
