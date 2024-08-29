@@ -32,6 +32,11 @@ ArenaAllocator::~ArenaAllocator() {
 #endif
 }
 
+
+constexpr usize align_up(usize value, usize alignment) {
+    return (value + alignment - 1) & ~(alignment - 1);
+}
+
 void* ArenaAllocator::alloc(usize size) {
     // Check if there is enough space in the arena to accommodate the requested size
     if (m_top + size > m_cap) {
@@ -41,12 +46,15 @@ void* ArenaAllocator::alloc(usize size) {
         return nullptr;
     }
 
+    size = align_up(size, 8);
+
     // Allocate memory from the arena by moving the top pointer
     void* allocated_memory = m_top;
     m_top += size;
 
     return allocated_memory;
 }
+
 
 const char* ArenaAllocator::create_str_copy(const char* str, usize* out_len) {
     size_t len = strlen(str);
