@@ -55,6 +55,8 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
             }
 
             for (auto* binding : std::span(set.bindings, set.binding_count)) {
+                check_for_autopadding(binding);
+
                 auto& reflection_binding = set.bindings[binding->binding];
 
                 auto& binding_info = set_info.bindings[reflection_binding->binding];
@@ -73,7 +75,13 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
 
     std::vector<VkDescriptorSetLayout> dset_layouts;
 
-    for (auto& set_info : std::span(set_infos)) {
+    for (int i = 0;i < std::span(set_infos).size();i++) {
+        auto& set_info = set_infos[i];
+        if(auto layout = get_set_layout(i);layout!= nullptr){
+            dset_layouts.push_back(layout);
+            continue;
+        }
+        
         if (set_info.bindings.empty()) break;
 
         DescriptorSetLayoutBuilder builder;
@@ -141,4 +149,40 @@ std::vector<std::pair<SpvReflectDescriptorBinding*, const PipelineReflection::Sh
     return found_bindings;
 }
 
+void PipelineReflection::check_for_autopadding(SpvReflectDescriptorBinding* binding) const{
+    if(binding->descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER) return;
+
+    check_for_autopadding_in_block(&binding->block);
+}
+
+
+void PipelineReflection::check_for_autopadding_in_block(SpvReflectBlockVariable* block) const {
+    if(block->size != block->padded_size) {
+        LOG_WARNING("block %s has padding\n",block->name);
+    }
+
+    uint total_bytes = 0;
+
+    for(auto& member : std::span(block->members, block->member_count)) {
+        total_bytes += member.size;
+        check_for_autopadding_in_block(&member);
+    }
+
+    if(total_bytes != block->padded_size) {
+        LOG_WARNING("block %s has padding %u vs %u\n",block->name,total_bytes,block->padded_size);
+    }
+}
+
+void PipelineReflection::set_descriptor_layout(int set_index, VkDescriptorSetLayout layout) {
+    if (set_index < 0 || set_index > 32) THROW_ERROR("invalid set index %d", set_index);
+
+    if(m_layouts.size() <= set_index) m_layouts.resize(set_index + 1);
+
+    m_layouts[set_index] = layout;
+}
+VkDescriptorSetLayout PipelineReflection::get_set_layout(int index) const {
+    if (index >= m_layouts.size()) return nullptr;
+
+    return m_layouts[index];
+}
 } // namespace vke
