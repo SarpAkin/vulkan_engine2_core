@@ -3,6 +3,7 @@
 #include "common.hpp" // IWYU pragma: export
 #include "fwd.hpp"
 
+#include <assert.h>
 #include <atomic>
 #include <memory>
 #include <vulkan/vulkan_core.h>
@@ -14,16 +15,22 @@ protected:
     VkDevice device() const;
     static VulkanContext* get_context();
 
+public:
     DeviceGetter()  = default;
     ~DeviceGetter() = default;
 };
 
-template<typename T>
+template <typename T>
 class RCResource;
 
-
 class Resource : public DeviceGetter {
-    template<typename T>
+    enum class OwnerShip {
+        OWNED,
+        RefCounted,
+        EXTERNAL,
+    };
+
+    template <typename T>
     friend class RCResource;
 
 public:
@@ -35,9 +42,16 @@ public:
     Resource& operator=(const Resource&) = delete;
     Resource& operator=(Resource&&)      = delete;
 
-    bool is_reference_counted() const { return m_is_reference_counted; }
-    //Must be refence counted or else it will assert
+    bool is_reference_counted() const { return m_ownership == OwnerShip::RefCounted; }
+    // Must be refence counted or else it will assert
     RCResource<Resource> get_reference();
+
+    void set_external(Resource* external) {
+        m_external  = external;
+        m_ownership = OwnerShip::EXTERNAL;
+    }
+
+    RCResource<Resource> try_get_reference();
 
 protected:
 private:
@@ -46,7 +60,9 @@ private:
     }
 
     std::atomic<int> m_ref_count = 0;
-    bool m_is_reference_counted  = false;
+    OwnerShip m_ownership        = OwnerShip::OWNED;
+
+    Resource* m_external = nullptr;
 };
 
 template <class T>
@@ -54,12 +70,17 @@ class RCResource {
     static_assert(std::is_base_of<Resource, T>::value, "T must inherit from Resource");
 
     friend Resource;
+
 public:
     T* get() { return m_ptr; }
     const T* get() const { return m_ptr; }
 
     T* operator->() { return m_ptr; }
     const T* operator->() const { return m_ptr; }
+
+    RCResource() {
+        m_ptr = nullptr;
+    }
 
     RCResource(std::unique_ptr<T>&& _res) {
         reset(std::move(_res));
@@ -136,10 +157,10 @@ private:
         T* res_typed  = _res.release();
         Resource* res = res_typed;
 
-        assert(res->m_is_reference_counted == false);
+        assert(res->is_reference_counted() == false);
 
-        res->m_is_reference_counted = true;
-        res->m_ref_count            = 1;
+        res->m_ownership = Resource::OwnerShip::RefCounted;
+        res->m_ref_count = 1;
 
         m_ptr = res;
     }
