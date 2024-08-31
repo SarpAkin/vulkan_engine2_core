@@ -11,13 +11,14 @@ namespace vke {
 class PipelineDescription;
 class PipelineGlobalsProvider;
 
-class DebugPipelineLoader : public IPipelineLoader {
+class DebugPipelineLoader final : public IPipelineLoader {
 public:
     DebugPipelineLoader(const char* pipeline_search_path);
     ~DebugPipelineLoader();
 
-    std::unique_ptr<IPipeline> load(const char* pipeline_name) final override;
-    void set_pipeline_globals_provider(std::unique_ptr<class PipelineGlobalsProvider> globals_provider) override final { m_globals_provider = std::move(globals_provider); }
+    std::unique_ptr<IPipeline> load(const char* pipeline_name) override;
+    void set_pipeline_globals_provider(std::unique_ptr<class PipelineGlobalsProvider> globals_provider) override { m_globals_provider = std::move(globals_provider); }
+    PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_globals_provider.get(); }
 
 private:
     void load_descriptions();
