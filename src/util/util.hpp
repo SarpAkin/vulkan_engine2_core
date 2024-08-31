@@ -19,6 +19,8 @@
 #include "../common.hpp"
 #include "../fwd.hpp"
 
+#include "arena_alloc.hpp"
+
 #include <cstdio>
 #include <stdexcept> // IWYU pragma: export
 
