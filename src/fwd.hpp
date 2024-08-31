@@ -28,4 +28,7 @@ class CPipelineBuilder;
 class Semaphore;
 class Fence;
 
+class IPipelineLoader;
+class IPipeline;
+
 }
