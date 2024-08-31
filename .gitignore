@@ -2,3 +2,4 @@ build/
 .vs
 .cache
 out/
+vcpkg_installed/
