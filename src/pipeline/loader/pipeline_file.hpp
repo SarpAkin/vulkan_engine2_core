@@ -59,14 +59,4 @@ public:
     }
 };
 
-
-
-// void foo() {
-//     PipelineFile pipelineFile;
-
-//     std::ifstream is("pipeline.json");
-//     cereal::JSONInputArchive archive(is);
-//     archive(CEREAL_NVP(pipelineFile));
-// }
-
 } // namespace vke
