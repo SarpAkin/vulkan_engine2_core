@@ -2,11 +2,16 @@
 
 #include <vke/fwd.hpp>
 
+#include <vulkan/vulkan.h>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/unordered_map.hpp>
 
 #include "vulkan_enums_cereal.hpp"
 

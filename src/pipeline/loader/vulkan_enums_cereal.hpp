@@ -5,6 +5,13 @@
 #include <string>
 
 #include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+
+namespace cereal {
+
+
+template <class Archive>
+struct specialize<Archive, VkPolygonMode, cereal::specialization::non_member_serialize> {};
 
 // Utility functions for serializing enums to string
 template <class Archive>
@@ -37,6 +44,9 @@ void serialize(Archive& archive, VkPolygonMode& mode) {
         }
     }
 }
+
+template <class Archive>
+struct specialize<Archive, VkPrimitiveTopology, cereal::specialization::non_member_serialize> {};
 
 template <class Archive>
 void serialize(Archive& archive, VkPrimitiveTopology& mode) {
@@ -85,6 +95,9 @@ void serialize(Archive& archive, VkPrimitiveTopology& mode) {
 }
 
 template <class Archive>
+struct specialize<Archive, VkCullModeFlagBits, cereal::specialization::non_member_serialize> {};
+
+template <class Archive>
 void serialize(Archive& archive, VkCullModeFlagBits& mode) {
     std::string str;
     if (Archive::is_saving::value) {
@@ -120,3 +133,5 @@ void serialize(Archive& archive, VkCullModeFlagBits& mode) {
         }
     }
 }
+
+} // namespace cereal
