@@ -19,7 +19,7 @@
 namespace vke {
 
 void PipelineBuilderBase::set_descriptor_set_layout(int set_index, VkDescriptorSetLayout layout) {
-    m_reflection->set_descriptor_layout(set_index, layout);
+    //m_reflection->set_descriptor_layout(set_index, layout);
 }
 
 
