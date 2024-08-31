@@ -22,7 +22,15 @@
 #include <cstdio>
 #include <stdexcept> // IWYU pragma: export
 
+namespace std {
+namespace filesystem {
+
+}
+}
+
 namespace vke {
+namespace fs = std::filesystem; 
+
 class ArenaAllocator;
 
 auto map_vec(auto&& vector, auto&& f) {
