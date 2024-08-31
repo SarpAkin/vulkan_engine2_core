@@ -55,7 +55,7 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
             }
 
             for (auto* binding : std::span(set.bindings, set.binding_count)) {
-                check_for_autopadding(binding);
+                //check_for_autopadding(binding);
 
                 auto& reflection_binding = set.bindings[binding->binding];
 
