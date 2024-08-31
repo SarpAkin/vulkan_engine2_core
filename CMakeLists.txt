@@ -20,18 +20,30 @@ add_library(vke
     ${LIB_CPPS}
 )
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SHADERC REQUIRED shaderc)
+
 # Set position-independent code for the target
 set_target_properties(vke PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(vke PUBLIC
     ${Vulkan_LIBRARIES}
-
+    ${SHADERC_LIBRARIES}
 )
 
-find_package(cereal)
 
-target_include_directories(vke PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/libs/ ${VKE_INCLUDE})
-target_include_directories(vke INTERFACE ${VKE_INCLUDE})
+target_include_directories(vke PUBLIC 
+    ${Vulkan_INCLUDE_DIRS} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/ 
+    ${VKE_INCLUDE} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/submodules/cereal/include
+    ${SHADERC_INCLUDE_DIRS}
+)
+
+
+target_include_directories(vke INTERFACE 
+    ${VKE_INCLUDE}
+)
 
 # target_compile_options(vke PUBLIC
 #     -DGLM_FORCE_DEPTH_ZERO_TO_ONE
