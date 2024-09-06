@@ -31,6 +31,8 @@ inline const char* to_cstring(SpvReflectResult result) {
     case SPV_REFLECT_RESULT_ERROR_SPIRV_INVALID_ENTRY_POINT: return "SPV_REFLECT_RESULT_ERROR_SPIRV_INVALID_ENTRY_POINT";
     case SPV_REFLECT_RESULT_ERROR_SPIRV_INVALID_EXECUTION_MODE: return "SPV_REFLECT_RESULT_ERROR_SPIRV_INVALID_EXECUTION_MODE";
     };
+
+    return "Unknown SPVReflectResult";
 }
 
 class SpvReflectionError : public std::exception {
