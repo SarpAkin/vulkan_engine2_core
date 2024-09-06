@@ -4,18 +4,17 @@
 
 #include <vulkan/vulkan.h>
 
+#include <json.hpp>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <cereal/cereal.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/unordered_map.hpp>
-
-#include "vulkan_enums_cereal.hpp"
+#include "enum_parsers.hpp"
 
 namespace vke {
+
+using json = nlohmann::json;
 
 class PipelineDescription {
 public:
@@ -26,26 +25,32 @@ public:
 
     std::unordered_map<std::string, std::string> compiler_definitions;
 
-    VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL;
+    VkPolygonMode polygon_mode        = VK_POLYGON_MODE_FILL;
     VkPrimitiveTopology topology_mode = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    VkCullModeFlagBits cull_mode = VK_CULL_MODE_NONE;
-    bool depth_test  = true;
-    bool depth_write = true;
+    VkCullModeFlagBits cull_mode      = VK_CULL_MODE_NONE;
+    bool depth_test                   = true;
+    bool depth_write                  = true;
 
-    template <class Archive>
-    void serialize(Archive& archive) {
-        archive( //
-            CEREAL_NVP(name),
-            CEREAL_NVP(renderpass),
-            CEREAL_NVP(vertex_input),
-            CEREAL_NVP(shader_files),
-            CEREAL_NVP(compiler_definitions),
-            CEREAL_NVP(polygon_mode),
-            CEREAL_NVP(topology_mode),
-            CEREAL_NVP(cull_mode),
-            CEREAL_NVP(depth_test),
-            CEREAL_NVP(depth_write) //
-        );
+    //not serialized
+    std::string file_path;
+
+    void load(const json& json) {
+        name         = json.value("name", "");
+        renderpass   = json.value("renderpass", "");
+        vertex_input = json.value("vertex_input", "");
+
+        shader_files = json.value("shader_files", std::vector<std::string>{});
+
+        auto defs = json.value("compiler_definitions", json::object());
+        for (auto it = defs.begin(); it != defs.end(); ++it) {
+            compiler_definitions[it.key()] = it.value().get<std::string>();
+        }
+
+        polygon_mode  = parse_polygon_mode(json.value("polygon_mode", "FILL"));
+        topology_mode = parse_topology_mode(json.value("topology_mode", "TRIANGLE_LIST"));
+        cull_mode     = parse_cull_mode(json.value("cull_mode", "NONE"));
+        depth_test    = json.value("depth_test", true);
+        depth_write   = json.value("depth_write", true);
     }
 };
 
@@ -53,9 +58,12 @@ class PipelineFile {
 public:
     std::vector<PipelineDescription> pipelines;
 
-    template <class Archive>
-    void serialize(Archive& archive) {
-        archive(CEREAL_NVP(pipelines));
+    void load(const json& json) {
+        for(const auto& pipeline : json.value("pipelines",json::array())){
+            PipelineDescription description;
+            description.load(pipeline);
+            pipelines.push_back(std::move(description));
+        }
     }
 };
 

@@ -32,5 +32,8 @@ RCResource<Resource> Resource::try_get_reference() {
     case OwnerShip::EXTERNAL:
         return m_external->try_get_reference();
     }
+
+    assert(false);
+    return RCResource<Resource>();
 }
 } // namespace vke

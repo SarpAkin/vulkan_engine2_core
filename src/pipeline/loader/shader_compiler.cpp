@@ -179,8 +179,10 @@ CompiledShader compile_glsl(const std::string& file_path, const std::unordered_m
 std::vector<CompiledShader> compile_shaders(PipelineDescription* description) {
     std::vector<CompiledShader> compiled_shaders;
 
+    auto base_path = fs::path(description->file_path).parent_path();
+
     for (auto& shader : description->shader_files) {
-        compiled_shaders.push_back(compile_glsl(shader, description->compiler_definitions));
+        compiled_shaders.push_back(compile_glsl(base_path / shader, description->compiler_definitions));
     }
 
     return compiled_shaders;

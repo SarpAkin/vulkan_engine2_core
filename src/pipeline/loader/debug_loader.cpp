@@ -8,8 +8,6 @@
 #include "pipeline_file.hpp"
 #include "pipeline_globals_provider.hpp"
 
-#include <cereal/archives/json.hpp>
-
 #include <filesystem>
 #include <fstream>
 
@@ -28,19 +26,22 @@ DebugPipelineLoader::DebugPipelineLoader(const char* pipeline_search_path) {
 std::unique_ptr<IPipeline> DebugPipelineLoader::load(const char* pipeline_name) {
     auto it = m_pipelines_descriptions.find(pipeline_name);
     if (it == m_pipelines_descriptions.end()) {
-        throw std::runtime_error("pipeline not found");
+        THROW_ERROR("pipeline %s not found", pipeline_name);
     }
 
     return load_pipeline(it->second.get());
 }
 
 void DebugPipelineLoader::load_descriptions() {
+    LOG_INFO("loading pipeline descriptions from %s", m_pipeline_search_path.c_str());
+
     for (const auto& entry : std::filesystem::recursive_directory_iterator(m_pipeline_search_path)) {
         if (!(entry.is_regular_file() && entry.path().filename() == "pipelines.json")) continue;
 
         try {
             load_pipeline_file(entry.path().c_str());
-        } catch (...) {
+        } catch (std::exception& e) {
+            LOG_ERROR("failed to load pipeline %s: %s", entry.path().c_str(), e.what());
         }
     }
 }
@@ -49,12 +50,16 @@ void DebugPipelineLoader::load_pipeline_file(const char* filename) {
     PipelineFile pipeline_file;
 
     auto is = std::ifstream(filename);
-    cereal::JSONInputArchive archive(is);
-    archive(CEREAL_NVP(pipeline_file));
+    pipeline_file.load(json::parse(is));
 
     for (auto& pipeline : pipeline_file.pipelines) {
-        m_pipelines_descriptions[pipeline.name] = std::make_unique<PipelineDescription>(std::move(pipeline));
+        auto name = pipeline.name; // pipeline is moved out so name becomes empty after the move
+        pipeline.file_path = filename;
+
+        m_pipelines_descriptions[name] = std::make_unique<PipelineDescription>(std::move(pipeline));
     }
+
+    LOG_INFO("loaded pipeline file %s with %ld pipelines", filename, pipeline_file.pipelines.size());
 }
 
 static VkPipelineBindPoint determine_pipeline_type(std::span<const CompiledShader> compiled_shaders) {

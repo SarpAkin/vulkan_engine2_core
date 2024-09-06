@@ -12,6 +12,8 @@
 
 #include "arena_alloc.hpp"
 
+namespace vke {
+
 std::vector<u8> read_file_binary(const char* name) {
     std::ifstream file(name, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {
@@ -73,7 +75,6 @@ std::string_view read_file(vke::ArenaAllocator* arena, const char* name) {
     return std::string_view(data, filesize);
 }
 
-
 void trace_stack(){
 #ifndef _WIN32
     void *buffer[100];
@@ -88,3 +89,4 @@ void trace_stack(){
 #endif
 }
 
+}
