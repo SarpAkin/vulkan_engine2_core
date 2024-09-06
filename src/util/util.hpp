@@ -57,6 +57,20 @@ auto map_vec_indicies(auto&& vector, auto&& f) {
     return results;
 }
 
+
+template<class T>
+auto map_vec_into_span(auto&& vector, auto&& f,std::span<T> span) {
+    int i = 0;
+    for(auto& element : vector) {
+        if(i >= span.size()) break;
+        
+        span[i] = f(element);
+        i++;
+    }
+
+    return span;
+}
+
 template <typename T>
 auto map_optional(const std::optional<T>& opt, auto&& func) -> std::optional<decltype(func(*opt))> {
     if (opt) {
@@ -74,6 +88,8 @@ std::string_view read_file(vke::ArenaAllocator* arena, const char* name);
 std::span<u32> cast_u8_to_span_u32(std::span<u8> span);
 
 std::string relative_path_impl(const char* source_path, const char* path);
+
+void trace_stack();
 
 } // namespace vke
 
@@ -102,18 +118,22 @@ std::string relative_path_impl(const char* source_path, const char* path);
     span;                                                                                      \
 })
 
+
 // returns an std::span allocated from alloca
 // WARNING IT DOESN'T CALL DESTRUCTOR
-#define MAP_VEC_ALLOCA(vector, ...) [&]{                                  \
-    auto&& f = __VA_ARGS__;\
-    using T    = decltype(f(*vector.begin()));                            \
-    T* results = reinterpret_cast<T*>(alloca(sizeof(T) * vector.size())); \
-    T* it      = results;                                                 \
-    for (auto& element : vector) {                                        \
-        *(it++) = f (element);                                             \
-    }                                                                     \
-    return std::span(results, it);                                               \
-}()
+// #define MAP_VEC_ALLOCA(vector, ...) [&]{                                  \
+//     auto&& f = __VA_ARGS__;\
+//     using T    = decltype(f(*vector.begin()));                            \
+//     T* results = reinterpret_cast<T*>(alloca(sizeof(T) * vector.size())); \
+//     T* it      = results;                                                 \
+//     for (auto& element : vector) {                                        \
+//         *(it++) = f (element);                                             \
+//     }                                                                     \
+//     return std::span(results, it);                                               \
+// }()
+
+#define MAP_VEC_ALLOCA(vector, ...)  vke::map_vec(vector, __VA_ARGS__)
+
 
 #ifdef _WIN32
 #define __PRETTY_FUNCTION__ __FUNCSIG__
@@ -170,8 +190,6 @@ std::string relative_path_impl(const char* source_path, const char* path);
 
 #define VKE_ASSERT(condition) \
     if (!(condition)) {       \
-        trace_stack();        \
+        vke::trace_stack();        \
         assert(condition);        \
     }
-
-void trace_stack();
