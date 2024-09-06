@@ -8,8 +8,6 @@
 #include "pipeline_file.hpp"
 #include "pipeline_globals_provider.hpp"
 
-#include <cereal/archives/json.hpp>
-
 #include <filesystem>
 #include <fstream>
 
@@ -49,8 +47,7 @@ void DebugPipelineLoader::load_pipeline_file(const char* filename) {
     PipelineFile pipeline_file;
 
     auto is = std::ifstream(filename);
-    cereal::JSONInputArchive archive(is);
-    archive(CEREAL_NVP(pipeline_file));
+    pipeline_file.load(json::parse(is));
 
     for (auto& pipeline : pipeline_file.pipelines) {
         m_pipelines_descriptions[pipeline.name] = std::make_unique<PipelineDescription>(std::move(pipeline));
