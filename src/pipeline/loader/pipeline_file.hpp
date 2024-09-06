@@ -31,11 +31,15 @@ public:
     bool depth_test                   = true;
     bool depth_write                  = true;
 
+    //not serialized
+    std::string file_path;
+
     void load(const json& json) {
         name         = json.value("name", "");
         renderpass   = json.value("renderpass", "");
         vertex_input = json.value("vertex_input", "");
-        shader_files = json.value("shaders", std::vector<std::string>{});
+
+        shader_files = json.value("shader_files", std::vector<std::string>{});
 
         auto defs = json.value("compiler_definitions", json::object());
         for (auto it = defs.begin(); it != defs.end(); ++it) {
@@ -58,7 +62,7 @@ public:
         for(const auto& pipeline : json.value("pipelines",json::array())){
             PipelineDescription description;
             description.load(pipeline);
-            pipelines.push_back(description);
+            pipelines.push_back(std::move(description));
         }
     }
 };
