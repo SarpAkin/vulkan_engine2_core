@@ -25,6 +25,8 @@ public:
 
     std::unordered_map<std::string, std::string> compiler_definitions;
 
+    std::unordered_map<std::string, int> set_layouts;
+
     VkPolygonMode polygon_mode        = VK_POLYGON_MODE_FILL;
     VkPrimitiveTopology topology_mode = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     VkCullModeFlagBits cull_mode      = VK_CULL_MODE_NONE;
@@ -44,6 +46,11 @@ public:
         auto defs = json.value("compiler_definitions", json::object());
         for (auto it = defs.begin(); it != defs.end(); ++it) {
             compiler_definitions[it.key()] = it.value().get<std::string>();
+        }
+
+        auto layouts = json.value("set_layouts", json::object());
+        for (auto it = layouts.begin(); it != layouts.end(); ++it) {
+            set_layouts[it.key()] = it.value().get<int>();
         }
 
         polygon_mode  = parse_polygon_mode(json.value("polygon_mode", "FILL"));

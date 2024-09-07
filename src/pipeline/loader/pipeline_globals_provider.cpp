@@ -29,6 +29,13 @@ void PipelineGlobalsProvider::set_globals(class GPipelineBuilder& builder, class
 }
 
 void PipelineGlobalsProvider::set_globals(class PipelineBuilderBase& builder, class PipelineDescription* description) const {
+    for(auto& [name, set_index] : description->set_layouts) {
+        auto it = set_layouts.find(name);
+        if(it == set_layouts.end()) THROW_ERROR("set layout %s not found", name.c_str());
+        
+        builder.set_descriptor_set_layout(set_index, it->second);
+    }
+    
 }
 
 } // namespace vke
