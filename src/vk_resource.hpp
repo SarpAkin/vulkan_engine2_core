@@ -162,7 +162,7 @@ private:
         res->m_ownership = Resource::OwnerShip::RefCounted;
         res->m_ref_count = 1;
 
-        m_ptr = res;
+        m_ptr = res_typed;
     }
 
 private:
