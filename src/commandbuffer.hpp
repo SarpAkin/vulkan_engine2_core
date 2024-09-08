@@ -102,7 +102,7 @@ private:
     VkCommandPool m_cmd_pool;
     bool m_is_external = false;
 
-    std::vector<std::unique_ptr<Resource>> m_dependent_resources;
+    std::vector<RCResource<Resource>> m_dependent_resources;
     std::vector<VkSemaphore> m_wait_semaphores;
 
     VkPipelineBindPoint m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;

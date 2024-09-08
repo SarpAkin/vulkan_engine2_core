@@ -6,6 +6,7 @@
 #include <string>
 
 #include "../../builders/vertex_input_builder.hpp"
+#include "../../isubpass.hpp"
 
 namespace vke{
 

@@ -84,6 +84,10 @@ void CommandBuffer::cmd_end_renderpass() {
 void CommandBuffer::bind_pipeline(IPipeline* pipeline) {
     if(m_current_pipeline == pipeline) return;
 
+    if(auto rc_ref = pipeline->try_get_reference()) {
+        m_dependent_resources.push_back(std::move(rc_ref));
+    }
+
     pipeline->bind(*this);
     m_current_pipeline = pipeline;
 }
@@ -158,8 +162,6 @@ void CommandBuffer::draw_mesh_tasks_indirect_count(const IBufferSpan* buffer, co
 }
 
 void CommandBuffer::dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z) {
-    printf("vulkan dispatch: %d %d %d\n",group_count_x,group_count_y,group_count_z);
-
     vkCmdDispatch(handle(), group_count_x, group_count_y, group_count_z);
 }
 

@@ -136,6 +136,10 @@ public:
         return RCResource(m_ptr);
     }
 
+    bool is_null() const { return m_ptr == nullptr; }
+
+    operator bool() const { return !is_null(); }
+
 private:
     // Unsafe consturctor that doesn't increment reference count
     RCResource(T* ptr) : m_ptr(ptr) {
@@ -162,7 +166,7 @@ private:
         res->m_ownership = Resource::OwnerShip::RefCounted;
         res->m_ref_count = 1;
 
-        m_ptr = res;
+        m_ptr = res_typed;
     }
 
 private:
