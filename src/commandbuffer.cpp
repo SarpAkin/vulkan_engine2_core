@@ -158,8 +158,6 @@ void CommandBuffer::draw_mesh_tasks_indirect_count(const IBufferSpan* buffer, co
 }
 
 void CommandBuffer::dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z) {
-    printf("vulkan dispatch: %d %d %d\n",group_count_x,group_count_y,group_count_z);
-
     vkCmdDispatch(handle(), group_count_x, group_count_y, group_count_z);
 }
 
