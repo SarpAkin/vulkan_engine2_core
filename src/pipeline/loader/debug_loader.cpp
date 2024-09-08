@@ -104,4 +104,11 @@ std::unique_ptr<IPipeline> DebugPipelineLoader::load_pipeline(PipelineDescriptio
     }
 }
 
+const PipelineDescription* DebugPipelineLoader::get_pipeline_description(const char* pipeline_name) {
+    auto it = m_pipelines_descriptions.find(pipeline_name);
+    if (it == m_pipelines_descriptions.end()) {
+        THROW_ERROR("pipeline %s not found", pipeline_name);
+    }
+    return it->second.get();
+}
 } // namespace vke

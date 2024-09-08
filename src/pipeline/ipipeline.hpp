@@ -18,8 +18,8 @@ public:
     virtual VkShaderStageFlagBits push_stages()=0;
     virtual VkDescriptorSetLayout set_layout(u32 index) = 0;
 protected:
-    virtual void bind(CommandBuffer& cmd);
-
+    virtual void bind(CommandBuffer& cmd);//for internal use do not call
+    friend class ReloadablePipeline;
     friend CommandBuffer;
 };
 
