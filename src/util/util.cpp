@@ -12,6 +12,14 @@
 
 #include "arena_alloc.hpp"
 
+#if defined(__linux__) || defined(__APPLE__)
+    #include <pthread.h>
+#elif defined(_WIN32)
+    #include <windows.h>
+    #include <processthreadsapi.h>
+#endif
+
+
 namespace vke {
 
 std::vector<u8> read_file_binary(const char* name) {
@@ -89,4 +97,12 @@ void trace_stack(){
 #endif
 }
 
+void name_thread(std::thread& thread, const char* name) {
+#if defined(__linux__) || defined(__APPLE__)
+    pthread_setname_np(thread.native_handle(), name);
+#elif defined(_WIN32)
+    SetThreadDescription(thread.native_handle(), std::wstring(name, name + strlen(name)).c_str());
+#endif
+
 }
+} // namespace vke

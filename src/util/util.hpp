@@ -15,6 +15,7 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "../common.hpp"
 #include "../fwd.hpp"
@@ -34,6 +35,8 @@ namespace vke {
 namespace fs = std::filesystem; 
 
 class ArenaAllocator;
+
+void name_thread(std::thread& thread, const char* name);
 
 auto map_vec(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin()))> results;
