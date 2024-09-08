@@ -192,15 +192,7 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
     auto result = vkCreateGraphicsPipelines(device(), m_pipeline_cache, 1, &pipeline_info, nullptr, &pipeline);
 
     if (result != VK_SUCCESS) {
-        printf("failed to build pipeline\n");
-
-        printf("shaders:\n");
-        for (auto& stage : m_shader_details) {
-            printf("\t%s\n", stage.file_path.c_str());
-        }
-        printf("\n");
-
-        return nullptr;
+        THROW_ERROR("failed to build pipeline %s",vke::vk_result_string(result).c_str());
     }
 
     if (is_mesh_shader) {
