@@ -12,3 +12,6 @@
 #include "../../src/vulkan_context.hpp"  // IWYU pragma: export
 #include "../../src/fence.hpp"  // IWYU pragma: export
 #include "../../src/semaphore.hpp"  // IWYU pragma: export
+#include "../../src/image.hpp"  // IWYU pragma: export
+#include "../../src/image_view.hpp"  // IWYU pragma: export
+

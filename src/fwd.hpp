@@ -18,6 +18,7 @@ class CommandBuffer;
 class Pipeline;
 class Image;
 class ImageView;
+class IImageView;
 class Fence;
 
 class ArenaAllocator;
