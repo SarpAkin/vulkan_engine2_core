@@ -91,31 +91,6 @@ void add_shader_kind_macro_def(shaderc::CompileOptions& options, shaderc_shader_
     }
 }
 
-// Function to compile GLSL shader
-shaderc::SpvCompilationResult compileGLSL(const std::string& file_path, shaderc_shader_kind kind = shaderc_glsl_infer_from_source) {
-    ArenaAllocator arena;
-
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-
-    options.SetTargetSpirv(shaderc_spirv_version_1_5);
-
-    // options.SetOptimizationLevel(shaderc_optimization_level_performance);
-    options.SetIncluder(std::make_unique<ShadercIncluder>(&arena));
-
-    add_shader_kind_macro_def(options, kind);
-
-    auto source = read_file(&arena, file_path.c_str());
-
-    shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source.begin(), source.size(), kind, file_path.c_str(), "main", options);
-
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-        throw std::runtime_error("Shader compilation failed: " + std::string(result.GetErrorMessage()));
-    }
-
-    return result;
-}
-
 shaderc_shader_kind inferShaderType(const std::string& filePath) {
     if (filePath.ends_with(".frag") || filePath.ends_with(".fsh")) return shaderc_glsl_fragment_shader;
     if (filePath.ends_with(".vert") || filePath.ends_with(".vsh")) return shaderc_glsl_vertex_shader;
@@ -163,6 +138,8 @@ CompiledShader compile_glsl(const std::string& file_path, const std::unordered_m
     }
 
     auto type = inferShaderType(file_path);
+
+    add_shader_kind_macro_def(options, type);
 
     shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source.begin(), source.size(), type, file_path.c_str(), "main", options);
 
