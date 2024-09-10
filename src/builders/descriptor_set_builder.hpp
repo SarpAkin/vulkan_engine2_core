@@ -24,6 +24,7 @@ public:
     }
 
     DescriptorSetBuilder& add_image_samplers(std::span<Image*> images, VkImageLayout layout, VkSampler sampler, VkShaderStageFlags stage);
+    DescriptorSetBuilder& add_image_samplers(std::span<IImageView*> images, VkImageLayout layout, VkShaderStageFlags stage);
 
     inline DescriptorSetBuilder& add_image_samplers(std::span<IImageView*> images, VkImageLayout layout, VkSampler sampler, VkShaderStageFlags stage) {
         return add_images(images, layout, sampler, stage, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
