@@ -199,4 +199,6 @@ std::unique_ptr<IImageView> Image::create_subview(const SubViewArgs& args) {
 }
 
 VkFormat IImageView::format() { return vke_image()->format(); }
+u32 IImageView::height() {return vke_image()->height(); }
+u32 IImageView::width() {return vke_image()->width(); }
 } // namespace vke

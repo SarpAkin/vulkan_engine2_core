@@ -46,7 +46,7 @@ class IImageView {
 public:
     virtual VkImageView view() const = 0;
     virtual Image* vke_image()       = 0;
-    VkFormat format();
+    virtual VkFormat format();
 
     virtual u32 base_layer() const     = 0;
     virtual u32 layer_count() const    = 0;
@@ -54,6 +54,11 @@ public:
     virtual u32 miplevel_count() const = 0;
 
     virtual VkImageViewType view_type() const = 0;
+
+    virtual VkSampler get_default_sampler() const { return VK_NULL_HANDLE; }
+
+    virtual u32 width();
+    virtual u32 height();
 
     virtual ~IImageView(){};
 };
