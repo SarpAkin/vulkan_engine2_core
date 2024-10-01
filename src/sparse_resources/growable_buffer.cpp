@@ -24,6 +24,7 @@ GrowableBuffer::GrowableBuffer(VkBufferUsageFlags usage, usize buffer_size, bool
 
     if (block_size == 0) {
         block_size = memory_requirements.alignment;
+        LOG_INFO("no block size specified. using %lu", block_size);
     } else {
         block_size = round_up_to_multiple(block_size, memory_requirements.alignment);
     }
@@ -57,7 +58,7 @@ void GrowableBuffer::resize(usize new_size) {
 
     for (usize i = 0; i < block_count; ++i) {
         VmaAllocationCreateInfo alloc_cinfo = {
-            .usage = VMA_MEMORY_USAGE_AUTO,
+            .usage = VMA_MEMORY_USAGE_GPU_ONLY,
         };
 
         VmaAllocation allocation;
@@ -85,6 +86,8 @@ void GrowableBuffer::resize(usize new_size) {
         if (bind_size > new_size) break;
     }
 
+    m_buffer_size = buffer_cursor;
+
     VkSparseBufferMemoryBindInfo buffer_bind_info = {
         .buffer    = m_buffer,
         .bindCount = uint32_t(m_sparse_infos.size()),
@@ -102,10 +105,11 @@ void GrowableBuffer::resize(usize new_size) {
     auto start = std::chrono::high_resolution_clock::now();
 
     VK_CHECK(vkWaitForFences(ctx->get_device(), 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max()));
+    VK_CHECK(vkResetFences(ctx->get_device(), 1, &fence));
 
     auto end      = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
-    LOG_INFO("waited %fµs for sparse buffer bind", static_cast<double>(duration) / 1E6);
+    LOG_INFO("waited %fµs for sparse buffer bind", static_cast<double>(duration) / 1E3);
 }
 } // namespace vke
