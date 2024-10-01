@@ -27,6 +27,8 @@ public:
 
     virtual std::span<u8> mapped_data_bytes() = 0;
 
+    virtual usize bind_size()const{return byte_size();}
+
     VkDeviceSize device_address() const;
 
     template <typename T>

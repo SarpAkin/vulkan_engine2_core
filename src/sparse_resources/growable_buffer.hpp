@@ -18,6 +18,8 @@ public:
     VkBuffer handle() const override { return m_buffer; }
     std::span<u8> mapped_data_bytes() override { assert(!"mapping not supported"); }
 
+    usize bind_size() const override { return VK_WHOLE_SIZE; }
+
 public:
     void resize(usize new_size);
 
