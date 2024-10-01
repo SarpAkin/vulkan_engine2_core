@@ -59,7 +59,7 @@ public:
     inline T* mapped_data_ptr() const { return reinterpret_cast<T*>(m_mapped_data); }
     
     template <typename T>
-    [[deprecated("use mapped_data")]]
+    // [[deprecated("use mapped_data")]]
     inline std::span<T> mapped_data_as_span() {
         T* data_begin = reinterpret_cast<T*>(m_mapped_data);
         T* data_end   = data_begin + (m_buffer_byte_size / sizeof(T));

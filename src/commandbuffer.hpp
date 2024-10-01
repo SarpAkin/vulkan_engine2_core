@@ -90,7 +90,7 @@ public:
     void draw_mesh_tasks_indirect(const IBufferSpan* indirect_draw_buffer, u32 draw_count, u32 stride);
     void draw_mesh_tasks_indirect_count(const IBufferSpan* indirect_draw_buffer, const IBufferSpan* draw_count_buffer, u32 max_draw_count, u32 stride);
 
-    void copy_buffer(const vke::Buffer* src_buffer, const vke::Buffer* dst_bfufer, std::span<VkBufferCopy> regions);
+    void copy_buffer(const vke::IBuffer* src_buffer, const vke::IBuffer* dst_bfufer, std::span<VkBufferCopy> regions);
     void copy_buffer(const vke::IBufferSpan& src_span, const vke::IBufferSpan& dst_span);
 
     void dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z);
