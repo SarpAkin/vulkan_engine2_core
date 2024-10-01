@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vulkan/vulkan.h>
 
 #include "common.hpp"
@@ -8,6 +9,12 @@ typedef struct VmaAllocator_T* VmaAllocator;
 typedef struct VmaAllocation_T* VmaAllocation;
 
 namespace vke {
+
+struct DeviceInfo{
+    VkPhysicalDeviceProperties properties;
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    VkPhysicalDeviceFeatures features;
+};
 
 class VulkanContext {
 public:
@@ -27,10 +34,16 @@ public:
     VkQueue get_graphics_queue() { return m_graphics_queue; }
     u32 get_graphics_queue_family() { return m_graphics_queue_family; }
 
+    DeviceInfo* get_device_info()const { return m_device_info.get(); }
+
+    VkFence get_thread_local_fence();
+
 private:
     void init_vma_allocator();
 
     void init_queues();
+
+    void query_device_info();
 
     VulkanContext(VkInstance instance, VkPhysicalDevice pdevice, VkDevice device);
 
@@ -43,6 +56,8 @@ private:
     VkPhysicalDevice m_physical_device = nullptr;
     VkDevice m_device                  = nullptr;
     VmaAllocator m_allocator           = nullptr;
+
+    std::unique_ptr<DeviceInfo> m_device_info;
 
     // queues
     VkQueue m_graphics_queue;
