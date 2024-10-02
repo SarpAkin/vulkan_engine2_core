@@ -6,6 +6,7 @@
 #include <vk_mem_alloc.h>
 
 #include "builders/descriptor_set_layout_builder.hpp"
+#include "fence.hpp"
 
 namespace vke {
 
@@ -19,6 +20,8 @@ VulkanContext::VulkanContext(VkInstance instance, VkPhysicalDevice pdevice, VkDe
     m_instance        = instance;
     m_device          = device;
     m_physical_device = pdevice;
+
+    query_device_info();
 
     init_vma_allocator();
     init_queues();
@@ -80,4 +83,25 @@ void VulkanContext::init_queues() {
 }
 
 void VulkanContext::cleanup_conext() { delete s_context; }
+
+void VulkanContext::query_device_info() {
+    m_device_info = std::make_unique<DeviceInfo>();
+
+    vkGetPhysicalDeviceProperties(m_physical_device, &m_device_info->properties);
+    vkGetPhysicalDeviceFeatures(m_physical_device, &m_device_info->features);
+    vkGetPhysicalDeviceMemoryProperties(m_physical_device, &m_device_info->memory_properties);
+}
+
+
+thread_local std::unique_ptr<vke::Fence> thread_local_fence = nullptr;
+
+VkFence VulkanContext::get_thread_local_fence() {
+    if (!thread_local_fence) {
+        thread_local_fence = std::make_unique<vke::Fence>();
+    }
+    
+    return thread_local_fence->handle();
+}
+
+
 } // namespace vke

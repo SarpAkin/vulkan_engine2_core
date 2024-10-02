@@ -8,6 +8,8 @@ class ISubpass;
 
 class VulkanContext;
 class Buffer;
+class IBuffer;
+class GrowableBuffer;
 class IBufferSpan;
 class BufferSpan;
 

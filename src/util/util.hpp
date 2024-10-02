@@ -94,6 +94,11 @@ std::string relative_path_impl(const char* source_path, const char* path);
 
 void trace_stack();
 
+template<class T>
+T round_up_to_multiple(const T& value, const T& multiple) {
+    return ((value + (multiple - 1)) / multiple) * multiple;
+}
+
 } // namespace vke
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))

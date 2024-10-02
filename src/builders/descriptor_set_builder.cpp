@@ -19,7 +19,7 @@ DescriptorSetBuilder& DescriptorSetBuilder::add_buffers(std::span<IBufferSpan*> 
         return VkDescriptorBufferInfo{
             .buffer = buffer->handle(),
             .offset = buffer->byte_offset(),
-            .range  = buffer->byte_size(),
+            .range  = buffer->bind_size(),
         };
     }),
         .binding      = m_binding_counter++,

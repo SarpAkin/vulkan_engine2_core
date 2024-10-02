@@ -14,19 +14,22 @@ namespace vke {
 
 class BufferSpan;
 class Buffer;
+class IBuffer;
 
 class IBufferSpan {
 public:
     virtual usize byte_offset() const { return 0; }
     virtual usize byte_size() const { return 0; }
-    virtual Buffer* vke_buffer()             = 0;
-    virtual const Buffer* vke_buffer() const = 0;
+    virtual IBuffer* vke_buffer()             = 0;
+    virtual const IBuffer* vke_buffer() const = 0;
 
     virtual VkBuffer handle() const = 0;
 
     virtual std::span<u8> mapped_data_bytes() = 0;
 
-    VkDeviceSize device_address()const;
+    virtual usize bind_size()const{return byte_size();}
+
+    VkDeviceSize device_address() const;
 
     template <typename T>
     std::span<T> mapped_data() {
@@ -40,15 +43,25 @@ public:
     BufferSpan subspan_item(usize item_offset, usize item_count);
 };
 
-class Buffer : public Resource, public IBufferSpan {
+class IBuffer : public IBufferSpan {
+public:
+
+protected:
+};
+
+class Buffer : public Resource, public IBuffer {
 public:
     Buffer(VkBufferUsageFlags usage, usize buffer_size, bool host_visible /* whether it is accessible by cpu*/);
     ~Buffer();
 
     VkBuffer handle() const override { return m_buffer; }
+
     template <typename T = void>
+    [[deprecated("use mapped_data")]]
     inline T* mapped_data_ptr() const { return reinterpret_cast<T*>(m_mapped_data); }
+    
     template <typename T>
+    // [[deprecated("use mapped_data")]]
     inline std::span<T> mapped_data_as_span() {
         T* data_begin = reinterpret_cast<T*>(m_mapped_data);
         T* data_end   = data_begin + (m_buffer_byte_size / sizeof(T));
@@ -61,8 +74,8 @@ public: // overrides
     usize byte_size() const override { return m_buffer_byte_size; }
 
 private:
-    Buffer* vke_buffer() override { return this; }
-    const Buffer* vke_buffer() const override { return this; }
+    IBuffer* vke_buffer() override { return this; }
+    const IBuffer* vke_buffer() const override { return this; }
 
 protected:
     VkBuffer m_buffer;
@@ -73,22 +86,22 @@ protected:
 
 class BufferSpan : public IBufferSpan {
 public:
-    BufferSpan(Buffer* buffer, usize offset, usize byte_size)
+    BufferSpan(IBuffer* buffer, usize offset, usize byte_size)
         : m_buffer(buffer), m_offset(offset), m_byte_size(byte_size) {
         assert(m_offset + m_byte_size <= m_buffer->byte_size());
     }
 
     usize byte_offset() const override { return m_offset; }
     usize byte_size() const override { return m_byte_size; }
-    Buffer* vke_buffer() override { return m_buffer; };
-    const Buffer* vke_buffer() const override { return m_buffer; };
+    IBuffer* vke_buffer() override { return m_buffer; };
+    const IBuffer* vke_buffer() const override { return m_buffer; };
 
     VkBuffer handle() const override { return m_buffer->handle(); }
 
     std::span<u8> mapped_data_bytes() override { return vke_buffer()->mapped_data_bytes().subspan(m_offset, m_byte_size); }
 
 private:
-    Buffer* m_buffer;
+    IBuffer* m_buffer;
     usize m_offset, m_byte_size;
 };
 

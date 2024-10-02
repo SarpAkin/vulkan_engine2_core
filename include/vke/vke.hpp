@@ -14,4 +14,4 @@
 #include "../../src/semaphore.hpp"  // IWYU pragma: export
 #include "../../src/image.hpp"  // IWYU pragma: export
 #include "../../src/image_view.hpp"  // IWYU pragma: export
-
+#include "../../src/sparse_resources/growable_buffer.hpp"  // IWYU pragma: export

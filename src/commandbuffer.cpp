@@ -173,7 +173,7 @@ void CommandBuffer::pipeline_barrier(const PipelineBarrierArgs& args) {
         static_cast<uint32_t>(args.image_memory_barriers.size()), args.image_memory_barriers.data());
 }
 
-void CommandBuffer::copy_buffer(const vke::Buffer* src_buffer, const vke::Buffer* dst_bfufer, std::span<VkBufferCopy> regions) {
+void CommandBuffer::copy_buffer(const vke::IBuffer* src_buffer, const vke::IBuffer* dst_bfufer, std::span<VkBufferCopy> regions) {
     vkCmdCopyBuffer(handle(), src_buffer->handle(), dst_bfufer->handle(), static_cast<u32>(regions.size()), regions.data());
 }
 void CommandBuffer::copy_buffer(const vke::IBufferSpan& src_span, const vke::IBufferSpan& dst_span) {
