@@ -108,8 +108,8 @@ void GrowableBuffer::resize(usize new_size) {
     VK_CHECK(vkResetFences(ctx->get_device(), 1, &fence));
 
     auto end      = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-    LOG_INFO("waited %fµs for sparse buffer bind", static_cast<double>(duration) / 1E3);
+    // LOG_INFO("waited %fµs for sparse buffer bind", static_cast<double>(duration) / 1E3);
 }
 } // namespace vke
