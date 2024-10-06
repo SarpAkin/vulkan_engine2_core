@@ -36,9 +36,9 @@ public:
     const T& operator[](size_t index) const { return _data()[index]; }
 
     T* begin() { return _data(); }
-    T* end() { return _data() + m_size; }
+    T* end() { return _data() + _size(); }
     const T* begin() const { return _data(); }
-    const T* end() const { return _data() + m_size; }
+    const T* end() const { return _data() + _size(); }
 
     void push_back(T&& item) {
         auto cur_size = _size();
@@ -63,6 +63,30 @@ public:
     }
 
     void reserve(size_t new_capacity) { _set_capacity(std::max(static_cast<uint32_t>(new_capacity), _size())); }
+
+    void resize(size_t __new_size,const T& value = T()) {
+        uint32_t new_size = __new_size;
+        uint32_t old_size = _size();
+        if(old_size == new_size) return;
+
+        if(_capacity() < new_size) {
+            _set_capacity(new_size);
+        }
+
+        _set_size(new_size); 
+
+        T* data = _data();
+
+        if(new_size > old_size) {
+            for(int i = old_size; i < new_size; i++) {
+                new (data + i) T(value);
+            }
+        }else{
+            for(int i = new_size; i < old_size; i++) {
+                data[i].~T();
+            }
+        }
+    }
 
     T pop_back() {
         uint32_t cur_size = _size();
