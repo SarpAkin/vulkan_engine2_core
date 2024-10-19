@@ -42,7 +42,7 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
     } set_infos[4] = {};
 
     u32 push_size = UINT32_MAX;
-    VkShaderStageFlags push_stage;
+    VkShaderStageFlags push_stage = 0;
 
     for (auto& shader : m_shaders) {
         auto* module = shader.module;
@@ -69,7 +69,7 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
 
         if (push_size == UINT32_MAX && module->push_constant_block_count > 0) {
             push_size  = module->push_constant_blocks[0].size;
-            push_stage = shader.stage;
+            push_stage |= shader.stage;
         }
     }
 
