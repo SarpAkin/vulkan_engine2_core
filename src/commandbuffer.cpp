@@ -142,7 +142,7 @@ void CommandBuffer::draw_indexed_indirect_count(const IBufferSpan* drawcall_buff
         count_buffer->handle(), count_buffer->byte_offset(), max_draw_count, stride);
 }
 
-static PFN_vkCmdDrawMeshTasksEXT _vkCmdDrawMeshTasksEXT = nullptr;
+thread_local static PFN_vkCmdDrawMeshTasksEXT _vkCmdDrawMeshTasksEXT = nullptr;
 void CommandBuffer::draw_mesh_tasks(u32 group_count_x, u32 group_count_y, u32 group_count_z) {
     if (_vkCmdDrawMeshTasksEXT == nullptr) {
         _vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(device(), "vkCmdDrawMeshTasksEXT");
@@ -153,8 +153,15 @@ void CommandBuffer::draw_mesh_tasks(u32 group_count_x, u32 group_count_y, u32 gr
 
     // vkCmdDrawMeshTasksEXT(handle(), group_count_x, group_count_y, group_count_z);
 }
+
+thread_local static PFN_vkCmdDrawMeshTasksIndirectEXT _vkCmdDrawMeshTasksIndirectEXT = nullptr;
 void CommandBuffer::draw_mesh_tasks_indirect(const IBufferSpan* buffer, u32 draw_count, u32 stride) {
-    vkCmdDrawMeshTasksIndirectEXT(handle(), buffer->handle(), buffer->byte_offset(), draw_count, stride);
+    if(_vkCmdDrawMeshTasksIndirectEXT == nullptr) {
+        _vkCmdDrawMeshTasksIndirectEXT = (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(device(), "vkCmdDrawMeshTasksIndirectEXT");
+        assert(_vkCmdDrawMeshTasksIndirectEXT && "vkCmdDrawMeshTasksIndirectEXT not available");
+    }
+    
+    _vkCmdDrawMeshTasksIndirectEXT(handle(), buffer->handle(), buffer->byte_offset(), draw_count, stride);
 }
 
 void CommandBuffer::draw_mesh_tasks_indirect_count(const IBufferSpan* buffer, const IBufferSpan* draw_count_buffer, u32 max_draw_count, u32 stride) {
