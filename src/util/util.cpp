@@ -6,6 +6,8 @@
 #include <iterator>
 #include <vector>
 
+#include <cxxabi.h>
+
 #ifndef _WIN32
 #include <execinfo.h>
 #endif
@@ -83,7 +85,54 @@ std::string_view read_file(vke::ArenaAllocator* arena, const char* name) {
     return std::string_view(data, filesize);
 }
 
-void trace_stack(){
+
+
+struct ParsedSymbol{
+    char file_path[256];
+    char function_name[240];
+    size_t offset;
+    size_t address;
+};
+
+bool parse_symbol(const char* input,ParsedSymbol* out) {
+
+    // Try parsing the string assuming both function and offset are present
+    if (sscanf(input, "%255[^()]%*[(]%239[^+]+%tx%*[)] [%tx]", out->file_path, out->function_name, &out->offset, &out->address) == 4) return true;
+    
+    if (sscanf(input, "%255[^()](+%tx%*[)] [%tx]", out->file_path, &out->offset, &out->address) == 3) {
+        out->function_name[0] = '\0';
+
+        return true;
+    } 
+
+    return false;
+}
+
+
+void demangle_symbols(const char* symbol,std::span<char> out_buf){
+    ParsedSymbol parsed_symbol;
+
+    char pretty_name[256];
+    char* function_name = nullptr;
+
+    if (parse_symbol(symbol, &parsed_symbol) && parsed_symbol.function_name[0] != '\0') {
+        int status;
+        size_t len = 256;
+        abi::__cxa_demangle(parsed_symbol.function_name, pretty_name, &len, &status);
+
+        if (status == 0) {
+            function_name = pretty_name;
+        }
+    }
+
+    if (function_name == nullptr) {
+        function_name = parsed_symbol.function_name;
+    }
+
+    snprintf(out_buf.data(),out_buf.size(), "%s(%s) [%lx]", parsed_symbol.file_path,function_name, parsed_symbol.address);
+}
+
+void trace_stack(FILE* stream) {
 #ifndef _WIN32
     void *buffer[100];
     int nptrs;
@@ -92,8 +141,16 @@ void trace_stack(){
     nptrs = backtrace(buffer, sizeof(buffer) / sizeof(void*));
 
     // Print out all the frames to stderr
-    fprintf(stderr, "Stack trace:\n");
-    backtrace_symbols_fd(buffer, nptrs, fileno(stderr));
+
+    char **symbols = backtrace_symbols(buffer, nptrs);
+
+    char name_buffer[256];
+    for(int i = 1;i < nptrs; ++i) {
+        demangle_symbols(symbols[i], name_buffer);
+        fprintf(stream, "%s\n", name_buffer);
+    }
+
+    free(symbols);
 #endif
 }
 

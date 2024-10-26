@@ -92,7 +92,7 @@ std::span<u32> cast_u8_to_span_u32(std::span<u8> span);
 
 std::string relative_path_impl(const char* source_path, const char* path);
 
-void trace_stack();
+void trace_stack(FILE* stream = stderr);
 
 template<class T>
 T round_up_to_multiple(const T& value, const T& multiple) {
