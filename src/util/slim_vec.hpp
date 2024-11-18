@@ -78,11 +78,11 @@ public:
         T* data = _data();
 
         if (new_size > old_size) {
-            for (int i = old_size; i < new_size; i++) {
+            for (uint32_t i = old_size; i < new_size; i++) {
                 new (data + i) T(value);
             }
         } else {
-            for (int i = new_size; i < old_size; i++) {
+            for (uint32_t i = new_size; i < old_size; i++) {
                 data[i].~T();
             }
         }
@@ -176,14 +176,15 @@ public:
     size_t size() const { return _size(); }
 
     void clear() {
-        for (int i = 0; i < m_size; ++i) {
-            _data()[i].~T();
+        auto* data = _data();
+        for (int i = 0; i < _size(); ++i) {
+            data[i].~T();
         }
 
-        m_size = 0;
+        _set_size(0);
     }
 
-    bool empty() const { return m_size == 0; }
+    bool empty() const { return _size() == 0; }
     void shrink_to_fit() { /*TODO*/ }
 
 private:
@@ -215,7 +216,7 @@ private:
 
         uint32_t cur_size = _size();
 
-        for (int i = 0; i < cur_size; ++i) {
+        for (uint32_t i = 0; i < cur_size; ++i) {
             data[i].~T();
         }
 
@@ -303,7 +304,7 @@ private:
             m_size = cur_size; // we set it normally to make it non small vec
         }
 
-        for (int i = 0; i < cur_size; ++i) {
+        for (uint32_t i = 0; i < cur_size; ++i) {
             new (new_data + i) T(std::move(old_data[i]));
             old_data[i].~T();
         }
@@ -328,7 +329,7 @@ private:
         }
     }
 
-    // Does not resize the vector
+    // Does not set m_size manualy
     void _set_size(uint32_t size) {
         if (is_small_vec()) {
             assert(size <= _small_vec_item_capacity);
