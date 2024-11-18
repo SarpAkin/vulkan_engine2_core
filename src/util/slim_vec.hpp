@@ -133,6 +133,33 @@ public:
         _set_size(_size() + 1);
     }
 
+    void erase(const_iterator first) {
+        erase(first, first + 1);
+    }
+
+    void erase(const_iterator first, const_iterator last) {
+        erase_at(std::distance(begin(), first), std::distance(first, last));
+    }
+
+    void erase_at(size_t index, size_t count = 1) {
+        assert(index + count <= _size());
+
+        size_t size = _size();
+        auto* data = _data();
+        
+        // shift elements
+        for(size_t i = index + count; i < size; ++i) {
+            data[i - count] = std::move(data[i]);
+        }
+
+        // destruct last elements
+        for(size_t i = size - count; i < size; ++i) {
+            data[i].~T();
+        }
+
+        _set_size(size - count);
+    }
+
     std::optional<T> try_pop_back() {
         if (_size() == 0) return std::nullopt;
 
