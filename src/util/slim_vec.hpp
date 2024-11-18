@@ -8,6 +8,7 @@
 #include <new>
 #include <optional>
 #include <utility>
+#include <span>
 
 namespace vke {
 
@@ -41,8 +42,14 @@ public:
 
     iterator begin() { return _data(); }
     iterator end() { return _data() + _size(); }
-    const_iterator begin() const { return _data(); }
-    const_iterator end() const { return _data() + _size(); }
+    const_iterator begin() const { return cbegin(); }
+    const_iterator end() const { return cend(); }
+    const_iterator cbegin() const { return _data(); }
+    const_iterator cend() const { return _data() + _size(); }
+
+    operator std::span<T>() { return {_data(), _size()}; }
+    operator std::span<const T>() const { return {_data(), _size()}; }
+
 
     void push_back(T&& item) {
         auto cur_size = _size();
@@ -113,7 +120,7 @@ public:
         _ensure_capacity_for_push_back();
 
         auto* data = _data();
-        new(data + _size()) T();
+        new (data + _size()) T();
 
         for (size_t i = _size(); i > index; --i) {
             data[i] = std::move(data[i - 1]);
@@ -128,7 +135,7 @@ public:
         _ensure_capacity_for_push_back();
 
         auto* data = _data();
-        new(data + _size()) T();
+        new (data + _size()) T();
 
         for (size_t i = _size(); i > index; --i) {
             data[i] = std::move(data[i - 1]);
@@ -151,15 +158,15 @@ public:
         assert(index + count <= _size());
 
         size_t size = _size();
-        auto* data = _data();
-        
+        auto* data  = _data();
+
         // shift elements
-        for(size_t i = index + count; i < size; ++i) {
+        for (size_t i = index + count; i < size; ++i) {
             data[i - count] = std::move(data[i]);
         }
 
         // destruct last elements
-        for(size_t i = size - count; i < size; ++i) {
+        for (size_t i = size - count; i < size; ++i) {
             data[i].~T();
         }
 
