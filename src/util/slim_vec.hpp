@@ -13,6 +13,10 @@ namespace vke {
 
 template <class T, bool smallVec = false>
 class SlimVec {
+public:
+    using iterator = T*;
+    using const_iterator = const T*;
+
 public: // c'tors
     SlimVec() = default;
     SlimVec(const SlimVec& other) { _copy_from(other); }
@@ -35,10 +39,10 @@ public:
     T& operator[](size_t index) { return _data()[index]; }
     const T& operator[](size_t index) const { return _data()[index]; }
 
-    T* begin() { return _data(); }
-    T* end() { return _data() + _size(); }
-    const T* begin() const { return _data(); }
-    const T* end() const { return _data() + _size(); }
+    iterator begin() { return _data(); }
+    iterator end() { return _data() + _size(); }
+    const_iterator begin() const { return _data(); }
+    const_iterator end() const { return _data() + _size(); }
 
     void push_back(T&& item) {
         auto cur_size = _size();
@@ -99,6 +103,10 @@ public:
         _set_size(cur_size_m1);
 
         return item;
+    }
+
+    void insert(){
+
     }
 
     std::optional<T> try_pop_back() {
