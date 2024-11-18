@@ -14,7 +14,7 @@ namespace vke {
 template <class T, bool smallVec = false>
 class SlimVec {
 public:
-    using iterator = T*;
+    using iterator       = T*;
     using const_iterator = const T*;
 
 public: // c'tors
@@ -47,9 +47,7 @@ public:
     void push_back(T&& item) {
         auto cur_size = _size();
 
-        if (cur_size == _capacity()) {
-            _set_capacity(_calculate_new_capacity());
-        }
+        _ensure_capacity_for_push_back();
 
         new (_data() + cur_size) T(std::move(item));
         _set_size(cur_size + 1);
@@ -58,9 +56,7 @@ public:
     void push_back(const T& item) {
         auto cur_size = _size();
 
-        if (cur_size == _capacity()) {
-            _set_capacity(_calculate_new_capacity());
-        }
+        _ensure_capacity_for_push_back();
 
         new (_data() + cur_size) T(std::move(item));
         _set_size(cur_size + 1);
@@ -68,25 +64,25 @@ public:
 
     void reserve(size_t new_capacity) { _set_capacity(std::max(static_cast<uint32_t>(new_capacity), _size())); }
 
-    void resize(size_t __new_size,const T& value = T()) {
+    void resize(size_t __new_size, const T& value = T()) {
         uint32_t new_size = __new_size;
         uint32_t old_size = _size();
-        if(old_size == new_size) return;
+        if (old_size == new_size) return;
 
-        if(_capacity() < new_size) {
+        if (_capacity() < new_size) {
             _set_capacity(new_size);
         }
 
-        _set_size(new_size); 
+        _set_size(new_size);
 
         T* data = _data();
 
-        if(new_size > old_size) {
-            for(int i = old_size; i < new_size; i++) {
+        if (new_size > old_size) {
+            for (int i = old_size; i < new_size; i++) {
                 new (data + i) T(value);
             }
-        }else{
-            for(int i = new_size; i < old_size; i++) {
+        } else {
+            for (int i = new_size; i < old_size; i++) {
                 data[i].~T();
             }
         }
@@ -130,6 +126,12 @@ public:
     void shrink_to_fit() { /*TODO*/ }
 
 private:
+    void _ensure_capacity_for_push_back() {
+        if (_size() == _capacity()) {
+            _set_capacity(_calculate_new_capacity());
+        }
+    }
+
     size_t _calculate_new_capacity() const {
         size_t current_cap = _capacity();
 
