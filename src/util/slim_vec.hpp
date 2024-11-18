@@ -101,8 +101,36 @@ public:
         return item;
     }
 
-    void insert(){
+    void insert(const_iterator pos, const T& value) {
+        insert(std::distance(begin(), pos), value);
+    }
 
+    void insert(const_iterator pos, T&& value) {
+        insert(std::distance(begin(), pos), value);
+    }
+
+    void insert_at(size_t index, T&& value) {
+        _ensure_capacity_for_push_back();
+
+        auto* data = _data();
+        for (size_t i = _size(); i > index; --i) {
+            data[i] = std::move(data[i - 1]);
+        }
+
+        new(data + index) T(std::move(value));
+        _set_size(_size() + 1);
+    }
+
+    void insert_at(size_t index, const T& value) {
+        _ensure_capacity_for_push_back();
+
+        auto* data = _data();
+        for (size_t i = _size(); i > index; --i) {
+            data[i] = std::move(data[i - 1]);
+        }
+
+        new(data + index) T(value);
+        _set_size(_size() + 1);
     }
 
     std::optional<T> try_pop_back() {
