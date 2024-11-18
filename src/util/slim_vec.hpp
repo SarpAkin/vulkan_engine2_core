@@ -113,11 +113,14 @@ public:
         _ensure_capacity_for_push_back();
 
         auto* data = _data();
+        new(data + _size()) T();
+
         for (size_t i = _size(); i > index; --i) {
             data[i] = std::move(data[i - 1]);
         }
 
-        new(data + index) T(std::move(value));
+        data[index] = std::move(value);
+
         _set_size(_size() + 1);
     }
 
@@ -125,11 +128,14 @@ public:
         _ensure_capacity_for_push_back();
 
         auto* data = _data();
+        new(data + _size()) T();
+
         for (size_t i = _size(); i > index; --i) {
             data[i] = std::move(data[i - 1]);
         }
 
-        new(data + index) T(value);
+        data[index] = value;
+
         _set_size(_size() + 1);
     }
 
