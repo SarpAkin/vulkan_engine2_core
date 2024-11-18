@@ -165,7 +165,7 @@ private:
 
             T* data = _data();
 
-            for (int i = 0; i < m_size; ++i) {
+            for (int i = 0; i < other._size(); ++i) {
                 new (data + i) T(std::move(other[i]));
                 other[i].~T();
             }
