@@ -8,11 +8,16 @@
 #include <new>
 #include <optional>
 #include <utility>
+#include <span>
 
 namespace vke {
 
 template <class T, bool smallVec = false>
 class SlimVec {
+public:
+    using iterator       = T*;
+    using const_iterator = const T*;
+
 public: // c'tors
     SlimVec() = default;
     SlimVec(const SlimVec& other) { _copy_from(other); }
@@ -35,17 +40,21 @@ public:
     T& operator[](size_t index) { return _data()[index]; }
     const T& operator[](size_t index) const { return _data()[index]; }
 
-    T* begin() { return _data(); }
-    T* end() { return _data() + _size(); }
-    const T* begin() const { return _data(); }
-    const T* end() const { return _data() + _size(); }
+    iterator begin() { return _data(); }
+    iterator end() { return _data() + _size(); }
+    const_iterator begin() const { return cbegin(); }
+    const_iterator end() const { return cend(); }
+    const_iterator cbegin() const { return _data(); }
+    const_iterator cend() const { return _data() + _size(); }
+
+    operator std::span<T>() { return {_data(), _size()}; }
+    operator std::span<const T>() const { return {_data(), _size()}; }
+
 
     void push_back(T&& item) {
         auto cur_size = _size();
 
-        if (cur_size == _capacity()) {
-            _set_capacity(_calculate_new_capacity());
-        }
+        _ensure_capacity_for_push_back();
 
         new (_data() + cur_size) T(std::move(item));
         _set_size(cur_size + 1);
@@ -54,9 +63,7 @@ public:
     void push_back(const T& item) {
         auto cur_size = _size();
 
-        if (cur_size == _capacity()) {
-            _set_capacity(_calculate_new_capacity());
-        }
+        _ensure_capacity_for_push_back();
 
         new (_data() + cur_size) T(std::move(item));
         _set_size(cur_size + 1);
@@ -64,25 +71,25 @@ public:
 
     void reserve(size_t new_capacity) { _set_capacity(std::max(static_cast<uint32_t>(new_capacity), _size())); }
 
-    void resize(size_t __new_size,const T& value = T()) {
+    void resize(size_t __new_size, const T& value = T()) {
         uint32_t new_size = __new_size;
         uint32_t old_size = _size();
-        if(old_size == new_size) return;
+        if (old_size == new_size) return;
 
-        if(_capacity() < new_size) {
+        if (_capacity() < new_size) {
             _set_capacity(new_size);
         }
 
-        _set_size(new_size); 
+        _set_size(new_size);
 
         T* data = _data();
 
-        if(new_size > old_size) {
-            for(int i = old_size; i < new_size; i++) {
+        if (new_size > old_size) {
+            for (uint32_t i = old_size; i < new_size; i++) {
                 new (data + i) T(value);
             }
-        }else{
-            for(int i = new_size; i < old_size; i++) {
+        } else {
+            for (uint32_t i = new_size; i < old_size; i++) {
                 data[i].~T();
             }
         }
@@ -101,6 +108,71 @@ public:
         return item;
     }
 
+    void insert(const_iterator pos, const T& value) {
+        insert(std::distance(begin(), pos), value);
+    }
+
+    void insert(const_iterator pos, T&& value) {
+        insert(std::distance(begin(), pos), value);
+    }
+
+    void insert_at(size_t index, T&& value) {
+        _ensure_capacity_for_push_back();
+
+        auto* data = _data();
+        new (data + _size()) T();
+
+        for (size_t i = _size(); i > index; --i) {
+            data[i] = std::move(data[i - 1]);
+        }
+
+        data[index] = std::move(value);
+
+        _set_size(_size() + 1);
+    }
+
+    void insert_at(size_t index, const T& value) {
+        _ensure_capacity_for_push_back();
+
+        auto* data = _data();
+        new (data + _size()) T();
+
+        for (size_t i = _size(); i > index; --i) {
+            data[i] = std::move(data[i - 1]);
+        }
+
+        data[index] = value;
+
+        _set_size(_size() + 1);
+    }
+
+    void erase(const_iterator first) {
+        erase(first, first + 1);
+    }
+
+    void erase(const_iterator first, const_iterator last) {
+        erase_at(std::distance(begin(), first), std::distance(first, last));
+    }
+
+    void erase_at(size_t index, size_t count = 1) {
+        assert(index + count <= _size());
+
+        size_t size = _size();
+        auto* data  = _data();
+
+        // shift elements
+        for (size_t i = index + count; i < size; ++i) {
+            data[i - count] = std::move(data[i]);
+        }
+
+        // destruct last elements
+        for (size_t i = size - count; i < size; ++i) {
+            data[i].~T();
+        }
+
+        _set_size(size - count);
+    }
+
     std::optional<T> try_pop_back() {
         if (_size() == 0) return std::nullopt;
 
@@ -111,17 +183,24 @@ public:
     size_t size() const { return _size(); }
 
     void clear() {
-        for (int i = 0; i < m_size; ++i) {
-            _data()[i].~T();
+        auto* data = _data();
+        for (int i = 0; i < _size(); ++i) {
+            data[i].~T();
         }
 
-        m_size = 0;
+        _set_size(0);
     }
 
-    bool empty() const { return m_size == 0; }
+    bool empty() const { return _size() == 0; }
     void shrink_to_fit() { /*TODO*/ }
 
 private:
+    void _ensure_capacity_for_push_back() {
+        if (_size() == _capacity()) {
+            _set_capacity(_calculate_new_capacity());
+        }
+    }
+
     size_t _calculate_new_capacity() const {
         size_t current_cap = _capacity();
 
@@ -144,7 +223,7 @@ private:
 
         uint32_t cur_size = _size();
 
-        for (int i = 0; i < cur_size; ++i) {
+        for (uint32_t i = 0; i < cur_size; ++i) {
             data[i].~T();
         }
 
@@ -232,7 +311,7 @@ private:
             m_size = cur_size; // we set it normally to make it non small vec
         }
 
-        for (int i = 0; i < cur_size; ++i) {
+        for (uint32_t i = 0; i < cur_size; ++i) {
             new (new_data + i) T(std::move(old_data[i]));
             old_data[i].~T();
         }
@@ -257,7 +336,7 @@ private:
         }
     }
 
-    // Does not resize the vector
+    // Does not set m_size manualy
     void _set_size(uint32_t size) {
         if (is_small_vec()) {
             assert(size <= _small_vec_item_capacity);
