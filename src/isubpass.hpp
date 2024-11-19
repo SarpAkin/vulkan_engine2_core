@@ -10,6 +10,7 @@ public:
     virtual u32 get_subpass_index() const       = 0;
     virtual VkRenderPass get_renderpass() const = 0;
     virtual u32 get_attachment_count() const    = 0;
+    virtual ~ISubpass()                         = default;
 };
 
 class SubpassDescription : public ISubpass {
