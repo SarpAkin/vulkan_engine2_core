@@ -34,7 +34,7 @@ public:
 
     inline const VkCommandBuffer& handle() { return this->m_cmd; }
 
-    inline void add_execution_dependency(std::unique_ptr<Resource> resource) { m_dependent_resources.push_back(std::move(resource)); }
+    inline void add_execution_dependency(vke::RCResource<Resource> resource) { m_dependent_resources.push_back(std::move(resource)); }
 
     // vk stuff
     void begin();
