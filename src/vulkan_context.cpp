@@ -9,6 +9,7 @@
 
 #include "builders/descriptor_set_layout_builder.hpp"
 #include "fence.hpp"
+#include "util/util.hpp"
 
 namespace vke {
 
@@ -25,7 +26,11 @@ VulkanContext::VulkanContext(VkInstance instance, VkPhysicalDevice pdevice, VkDe
 
     query_device_info();
 
-    init_vma_allocator();
+    ContextConfig config{
+        .device_memory_addres = true,
+    };
+
+    init_vma_allocator(config);
     init_queues();
 }
 
@@ -42,7 +47,7 @@ VulkanContext::VulkanContext(const ContextConfig& config) {
 
     query_device_info();
 
-    init_vma_allocator();
+    init_vma_allocator(config);
     init_queues();
 }
 
@@ -68,7 +73,16 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBit
     return VK_FALSE; // Applications must return false here
 }
 
-void VulkanContext::init_context(const ContextConfig& config) {
+void validate_config(ContextConfig& config) {
+    if (config.device_memory_addres) {
+        config.features1_2.bufferDeviceAddress = true;
+    }
+
+}
+
+void VulkanContext::init_context(const ContextConfig& _config) {
+    ContextConfig config = _config;
+    validate_config(config);
 
     auto builder = vkb::InstanceBuilder();
 
@@ -103,20 +117,23 @@ void VulkanContext::init_context(const ContextConfig& config) {
     m_device = vkb_device_builder.build()->device;
 }
 
-void VulkanContext::init_vma_allocator() {
+void VulkanContext::init_vma_allocator(const ContextConfig& config) {
     VmaVulkanFunctions vulkan_functions = {
         .vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
         .vkGetDeviceProcAddr   = &vkGetDeviceProcAddr,
     };
 
     VmaAllocatorCreateInfo create_info{
-        .flags            = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
         .physicalDevice   = m_physical_device,
         .device           = m_device,
         .pVulkanFunctions = &vulkan_functions,
         .instance         = m_instance,
         .vulkanApiVersion = VK_API_VERSION_1_2,
     };
+
+    if (config.device_memory_addres) {
+        create_info.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+    }
 
     vmaCreateAllocator(&create_info, &m_allocator);
 

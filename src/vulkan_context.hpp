@@ -44,7 +44,7 @@ public:
 private:
     void init_context(const ContextConfig& config);
 
-    void init_vma_allocator();
+    void init_vma_allocator(const ContextConfig& config);
     void init_queues();
     void query_device_info();
 
@@ -76,6 +76,7 @@ struct ContextConfig {
     u32 vk_version_minor = 3;
     u32 vk_version_patch = 0;
     bool window = true;
+    bool device_memory_addres = false;
     // Window* window       = nullptr;
     VkPhysicalDeviceFeatures features1_0 = {};
     VkPhysicalDeviceVulkan11Features features1_1 = {};
