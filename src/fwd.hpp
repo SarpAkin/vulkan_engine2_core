@@ -34,4 +34,6 @@ class Fence;
 class IPipelineLoader;
 class IPipeline;
 
+class Window;
+class RenderPass;
 }
