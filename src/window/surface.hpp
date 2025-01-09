@@ -35,9 +35,9 @@ public: // getters
     const std::vector<VkImageView>& get_swapchain_image_views() const { return m_swapchain_image_views; }
     VkAttachmentDescription get_color_attachment() const;
 
-    Surface(VkSurfaceKHR surface,Window* window) {
+    Surface(VkSurfaceKHR surface, Window* window) {
         m_surface = surface;
-        m_window = window;
+        m_window  = window;
     }
     ~Surface();
 
@@ -45,14 +45,20 @@ public: // getters
     void init_swapchain();
 
     bool prepare(u64 time_out = UINT64_MAX);
-    void present();
-    
-    void recrate_swapchain(vke::CommandBuffer& cmd);
+    bool present();
+
+    void recrate_swapchain() {
+        printf("recrating swapchin!\n");
+        init_swapchain();
+    }
 
     u32 get_swapchain_image_index() const { return m_swapchain_image_index; }
 
     Semaphore* get_prepare_semaphore() const { return m_current_prepare_semaphore; } // returns null if prepare isn't called that frame
     Semaphore* get_wait_semaphore() const { return m_current_wait_semaphore; }
+
+private:
+    void destroy_swapchain();
 
 private:
     Window* m_window;
@@ -63,6 +69,7 @@ private:
     std::vector<VkImageView> m_swapchain_image_views;
 
     u32 m_swapchain_image_index = 0;
+    u32 m_frame_index           = 0;
 
     // prepare semaphore is signalled after surface preparetion, wait semapore is used to wait for present
     std::vector<std::unique_ptr<Semaphore>> m_prepare_semaphores, m_wait_semaphores;
