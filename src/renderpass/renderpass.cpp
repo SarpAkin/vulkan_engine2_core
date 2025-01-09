@@ -35,8 +35,9 @@ void Renderpass::set_states(CommandBuffer& cmd) {
 
 void Renderpass::begin(CommandBuffer& cmd) {
     if (m_target_size) {
-        if (m_target_size->width() != width() || m_target_size->height() != height())
+        if (m_target_size->width() != width() || m_target_size->height() != height()) {
             resize(cmd, m_target_size->width(), m_target_size->height());
+        }
     }
 
     VkRenderPassBeginInfo rp_begin_info{
@@ -55,7 +56,6 @@ void Renderpass::begin(CommandBuffer& cmd) {
 
     if (!m_is_external) set_states(cmd);
 }
-
 
 void Renderpass::next_subpass(CommandBuffer& cmd) {
     cmd.cmd_next_subpass(m_is_external ? VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS : VK_SUBPASS_CONTENTS_INLINE);
@@ -76,4 +76,5 @@ Renderpass::~Renderpass() {
 //     renderpass->begin(*this);
 // }
 
+VkRenderPass SubpassDetails::get_renderpass() const { return renderpass->handle(); }
 } // namespace vke

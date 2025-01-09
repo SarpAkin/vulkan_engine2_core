@@ -11,19 +11,27 @@
 #include "../window/surface.hpp"
 #include "frame_buffer.hpp"
 
+#include "../isubpass.hpp"
+
 namespace vke {
 
 class Renderpass;
 
-struct SubpassDetails {
+struct SubpassDetails final : public ISubpass {
     std::vector<VkFormat> color_attachments;
     std::optional<VkFormat> depth_format;
     Renderpass* renderpass;
     u32 subpass_index;
+
+public:
+    virtual u32 get_subpass_index() const override { return subpass_index; }
+    virtual VkRenderPass get_renderpass() const override;
+    virtual u32 get_attachment_count() const override { return color_attachments.size(); };
+    ~SubpassDetails() {};
+    SubpassDetails()=default;
 };
 
-
-//an abstarct renderpass class
+// an abstarct renderpass class
 class Renderpass : public Resource, public IRenderTargetSize {
 public: // getters
     u32 width() const override { return m_width; }
@@ -33,7 +41,7 @@ public: // getters
 
     void set_target_size(IRenderTargetSize* target) { m_target_size = target; }
 
-    virtual void resize(CommandBuffer& cmd,u32 width,u32 height);
+    virtual void resize(CommandBuffer& cmd, u32 width, u32 height);
 
 public: // methods
     virtual void set_states(CommandBuffer& cmd);
@@ -54,10 +62,9 @@ protected:
     bool m_is_external;
     u32 m_width, m_height;
     VkRenderPass m_renderpass = nullptr; // should be destroyed by this class, created by child class.
-    IRenderTargetSize* m_target_size;
+    IRenderTargetSize* m_target_size = nullptr;
     std::vector<VkClearValue> m_clear_values;
     std::vector<SubpassDetails> m_subpasses; // shouldn't be modified after creation. especially should't be resized since pointers to elements might be created.
 };
-
 
 } // namespace vke
