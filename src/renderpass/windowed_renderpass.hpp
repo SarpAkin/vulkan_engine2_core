@@ -26,6 +26,7 @@ private:
     Window* m_window = nullptr;
     std::vector<RCResource<impl::Framebuffer>> m_framebuffers;
     std::unique_ptr<vke::Image> m_depth;
+    std::vector<VkImageView> m_swapchain_image_views;
 };
 
 }
