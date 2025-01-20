@@ -7,8 +7,8 @@
 
 #include "../vulkan_context.hpp"
 
-#include "../util/util.hpp"
 #include "../semaphore.hpp"
+#include "../util/util.hpp"
 #include "../vkutil.hpp"
 #include "window.hpp"
 
@@ -20,9 +20,13 @@ void Surface::init_swapchain() {
             // use vsync present mode
             .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
             // .set_desired_extent(m_width, m_height)
-            // .set_old_swapchain(old_swapchain)
+            .set_old_swapchain(m_swapchain)
             .build()
             .value();
+
+    if (m_swapchain) {
+        destroy_swapchain();
+    }
 
     m_swapchain_image_format = vkb_swapchain.image_format;
     m_swapchain              = vkb_swapchain.swapchain;
@@ -37,14 +41,19 @@ Surface::~Surface() {
     printf("Surface cleanup\n");
 
     if (m_swapchain) {
-        vkDestroySwapchainKHR(device(), m_swapchain, nullptr);
-
-        // destroy swapchain resources
-        for (auto& iv : m_swapchain_image_views)
-            vkDestroyImageView(device(), iv, nullptr);
+        destroy_swapchain();
     }
 
     vkDestroySurfaceKHR(vke::VulkanContext::get_context()->get_instance(), m_surface, nullptr);
+}
+
+void Surface::destroy_swapchain() {
+    vkDestroySwapchainKHR(device(), m_swapchain, nullptr);
+
+    // destroy swapchain resources
+    for (auto& iv : m_swapchain_image_views) {
+        vkDestroyImageView(device(), iv, nullptr);
+    }
 }
 
 VkAttachmentDescription Surface::get_color_attachment() const {
@@ -74,28 +83,30 @@ VkAttachmentDescription Surface::get_color_attachment() const {
 bool Surface::prepare(u64 time_out) {
     assert(m_current_prepare_semaphore == nullptr && "called prepare 2 times before calling present!");
 
-    auto& prepare_semaphore = m_prepare_semaphores[m_swapchain_image_index];
-    auto& wait_semaphore    = m_wait_semaphores[m_swapchain_image_index];
+    auto& prepare_semaphore = m_prepare_semaphores[m_frame_index];
+    auto& wait_semaphore    = m_wait_semaphores[m_frame_index];
     if (prepare_semaphore == nullptr) {
         prepare_semaphore = std::make_unique<Semaphore>(); // lazily initialize semaphore since during surface creation device doesn't exist.
         wait_semaphore    = std::make_unique<Semaphore>();
     }
 
     auto result = vkAcquireNextImageKHR(device(), m_swapchain, time_out, prepare_semaphore->handle(), nullptr, &m_swapchain_image_index);
-    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR){
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         return false;
-    }else{
+    } else {
         VK_CHECK(result);
-    }   
+    }
 
     m_current_prepare_semaphore = prepare_semaphore.get();
     m_current_wait_semaphore    = wait_semaphore.get();
 
+    m_frame_index = (m_frame_index + 1) % m_wait_semaphores.size();
+
     return true;
 }
 
-void Surface::present() {
-    VkSemaphore wait_semaphores[] =  {m_current_wait_semaphore->handle()};
+bool Surface::present() {
+    VkSemaphore wait_semaphores[] = {m_current_wait_semaphore->handle()};
 
     VkPresentInfoKHR presentInfo = {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -110,9 +121,14 @@ void Surface::present() {
         .pImageIndices = &m_swapchain_image_index,
     };
 
-    VK_CHECK(vkQueuePresentKHR(VulkanContext::get_context()->get_graphics_queue(), &presentInfo));
-
     m_current_prepare_semaphore = nullptr;
+    auto result                 = vkQueuePresentKHR(VulkanContext::get_context()->get_graphics_queue(), &presentInfo);
+
+    if (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR) return true;
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) return false;
+
+    VK_CHECK(result);
+    return false;
 }
 
 u32 Surface::height() const {

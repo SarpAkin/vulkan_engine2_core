@@ -165,7 +165,7 @@ void CommandBuffer::draw_mesh_tasks_indirect(const IBufferSpan* buffer, u32 draw
 }
 
 void CommandBuffer::draw_mesh_tasks_indirect_count(const IBufferSpan* buffer, const IBufferSpan* draw_count_buffer, u32 max_draw_count, u32 stride) {
-    vkCmdDrawMeshTasksIndirectCountEXT(handle(), buffer->handle(), buffer->byte_offset(), draw_count_buffer->handle(), draw_count_buffer->byte_offset(), max_draw_count, stride);
+    // vkCmdDrawMeshTasksIndirectCountEXT(handle(), buffer->handle(), buffer->byte_offset(), draw_count_buffer->handle(), draw_count_buffer->byte_offset(), max_draw_count, stride);
 }
 
 void CommandBuffer::dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z) {

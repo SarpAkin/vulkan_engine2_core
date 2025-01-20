@@ -14,8 +14,8 @@
 #include <optional>
 #include <span>
 #include <string>
-#include <vector>
 #include <thread>
+#include <vector>
 
 #include "../common.hpp"
 #include "../fwd.hpp"
@@ -29,10 +29,10 @@ namespace std {
 namespace filesystem {
 
 }
-}
+} // namespace std
 
 namespace vke {
-namespace fs = std::filesystem; 
+namespace fs = std::filesystem;
 
 class ArenaAllocator;
 
@@ -60,13 +60,12 @@ auto map_vec_indicies(auto&& vector, auto&& f) {
     return results;
 }
 
-
-template<class T>
-auto map_vec_into_span(auto&& vector, auto&& f,std::span<T> span) {
+template <class T>
+auto map_vec_into_span(auto&& vector, auto&& f, std::span<T> span) {
     int i = 0;
-    for(auto& element : vector) {
-        if(i >= span.size()) break;
-        
+    for (auto& element : vector) {
+        if (i >= span.size()) break;
+
         span[i] = f(element);
         i++;
     }
@@ -94,10 +93,13 @@ std::string relative_path_impl(const char* source_path, const char* path);
 
 void trace_stack(FILE* stream = stderr);
 
-template<class T>
+template <class T>
 T round_up_to_multiple(const T& value, const T& multiple) {
     return ((value + (multiple - 1)) / multiple) * multiple;
 }
+
+template <typename T, size_t N>
+constexpr size_t array_len(const T (&array)[N]) { return N; }
 
 } // namespace vke
 
@@ -126,7 +128,6 @@ T round_up_to_multiple(const T& value, const T& multiple) {
     span;                                                                                      \
 })
 
-
 // returns an std::span allocated from alloca
 // WARNING IT DOESN'T CALL DESTRUCTOR
 // #define MAP_VEC_ALLOCA(vector, ...) [&]{                                  \
@@ -140,8 +141,7 @@ T round_up_to_multiple(const T& value, const T& multiple) {
 //     return std::span(results, it);                                               \
 // }()
 
-#define MAP_VEC_ALLOCA(vector, ...)  vke::map_vec(vector, __VA_ARGS__)
-
+#define MAP_VEC_ALLOCA(vector, ...) vke::map_vec(vector, __VA_ARGS__)
 
 #ifdef _WIN32
 #define __PRETTY_FUNCTION__ __FUNCSIG__
@@ -167,20 +167,19 @@ T round_up_to_multiple(const T& value, const T& multiple) {
 #define LOG_ERROR(fmt, ...) fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "][%s]" ANSI_COLOR_RED "[ERROR] " fmt ANSI_COLOR_RESET "\n", __PRETTY_FUNCTION__ __VA_OPT__(, ) __VA_ARGS__)
 #define LOG_WARNING(fmt, ...) fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "][%s]" ANSI_COLOR_YELLOW "[WARNING] " fmt ANSI_COLOR_RESET "\n", __PRETTY_FUNCTION__ __VA_OPT__(, ) __VA_ARGS__)
 #else
-#define LOG_INFO(...) printf(ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_RESET "[INFO] "  __VA_ARGS__);printf("\n");
+#define LOG_INFO(...)                                                                                             \
+    printf(ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_RESET "[INFO] " __VA_ARGS__); \
+    printf("\n");
 
-#define LOG_ERROR(fmt, ...)                                                                                                   \
+#define LOG_ERROR(fmt, ...)                                                                                               \
     fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_RED "[ERROR] " __VA_ARGS__); \
-    fprintf(stderr ,ANSI_COLOR_RESET "\n ", );
+    fprintf(stderr, ANSI_COLOR_RESET "\n ", );
 
-
-#define LOG_WARNING(fmt, ...)                                                                                          \
+#define LOG_WARNING(fmt, ...)                                                                                                  \
     fprintf(stderr, ANSI_COLOR_GREEN "[C++][" __FILE__ ":" TOSTRING(__LINE__) "]" ANSI_COLOR_YELLOW "[WARNING] " __VA_ARGS__); \
-    fprintf(stderr,ANSI_COLOR_RESET "\n");
+    fprintf(stderr, ANSI_COLOR_RESET "\n");
 
 #endif // !_WIN32
-
-
 
 #define THROW_ERROR(fmt, ...)                                                                                                                 \
     {                                                                                                                                         \
@@ -198,6 +197,6 @@ T round_up_to_multiple(const T& value, const T& multiple) {
 
 #define VKE_ASSERT(condition) \
     if (!(condition)) {       \
-        vke::trace_stack();        \
-        assert(condition);        \
+        vke::trace_stack();   \
+        assert(condition);    \
     }

@@ -49,7 +49,7 @@ protected:
 
     std::unique_ptr<Surface> m_surface;
 
-    MouseInputData m_mouse_input;
+    MouseInputData m_mouse_input = {};
     std::unordered_map<u32, bool> m_key_states;
     std::unordered_map<u32, std::function<void()>> m_key_callbacks;
     std::unordered_map<u32, std::function<void()>> m_mouse_callbacks;
