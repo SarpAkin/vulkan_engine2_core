@@ -7,8 +7,9 @@
 #include <cstdlib>
 #include <new>
 #include <optional>
-#include <utility>
 #include <span>
+#include <utility>
+#include <vector>
 
 namespace vke {
 
@@ -33,6 +34,23 @@ public: // c'tors
         return *this;
     }
 
+    SlimVec& operator=(const std::vector<T>& std_vec) {
+        clear();
+        reserve(std_vec.size());
+        for (const auto& e : std_vec) {
+            push_back(e);
+        }
+        return *this;
+    }
+
+    SlimVec(const std::vector<T>& std_vec) {
+        clear();
+        reserve(std_vec.size());
+        for (const auto& e : std_vec) {
+            push_back(e);
+        }
+    }
+
 public:
     T* data(T* data) { return _data(); }
     const T* data(T* data) const { return _data(); }
@@ -49,7 +67,6 @@ public:
 
     operator std::span<T>() { return {_data(), _size()}; }
     operator std::span<const T>() const { return {_data(), _size()}; }
-
 
     void push_back(T&& item) {
         auto cur_size = _size();
