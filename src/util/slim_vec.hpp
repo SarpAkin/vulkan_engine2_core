@@ -244,7 +244,7 @@ private:
             data[i].~T();
         }
 
-        if (!is_small_vec()) {
+        if (!is_small_vec() && _capacity() > 0) {
             free(data);
         }
 
