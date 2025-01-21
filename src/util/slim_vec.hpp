@@ -51,6 +51,23 @@ public: // c'tors
         }
     }
 
+    SlimVec& operator=(const std::initializer_list<T>& iterable) {
+        clear();
+        reserve(std::distance(iterable.begin(), iterable.end()));
+        for (const auto& e : iterable) {
+            push_back(e);
+        }
+        return *this;
+    }
+
+    SlimVec(const std::initializer_list<T>& iterable) {
+        clear();
+        reserve(std::distance(iterable.begin(), iterable.end()));
+        for (const auto& e : iterable) {
+            push_back(e);
+        }
+    }
+
 public:
     T* data(T* data) { return _data(); }
     const T* data(T* data) const { return _data(); }
