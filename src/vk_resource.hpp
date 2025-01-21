@@ -98,7 +98,7 @@ public:
     RCResource(const RCResource& other) {
         m_ptr = other.m_ptr;
         if (m_ptr) {
-            m_ptr->increment_ref_counter();
+            m_ptr->increment_reference_count();
         }
     }
 
@@ -111,7 +111,7 @@ public:
             // Copy the new resource
             m_ptr = other.m_ptr;
             if (m_ptr) {
-                m_ptr->increment_ref_counter();
+                m_ptr->increment_reference_count();
             }
         }
         return *this;
@@ -131,7 +131,7 @@ public:
     RCResource<T1> convert_to() {
         if (m_ptr == nullptr) return RCResource(nullptr);
 
-        m_ptr->increment_ref_counter();
+        m_ptr->increment_reference_count();
 
         return RCResource(m_ptr);
     }
