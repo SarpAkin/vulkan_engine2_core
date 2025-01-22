@@ -81,6 +81,31 @@ auto map_optional(const std::optional<T>& opt, auto&& func) -> std::optional<dec
     return std::nullopt;
 }
 
+//https://stackoverflow.com/questions/2067988/how-to-make-a-recursive-lambda
+template <class F>
+struct YCombinator {
+    F f; // the lambda will be stored here
+
+    // a forwarding operator():
+    template <class... Args>
+    decltype(auto) operator()(Args&&... args) const {
+        // we pass ourselves to f, then the arguments.
+        return f(*this, std::forward<Args>(args)...);
+    }
+
+    template <class... Args>
+    decltype(auto) operator()(Args&&... args) {
+        // we pass ourselves to f, then the arguments.
+        return f(*this, std::forward<Args>(args)...);
+    }
+};
+
+// helper function that deduces the type of the lambda:
+template <class F>
+YCombinator<std::decay_t<F>> make_y_combinator(F&& f) {
+    return {std::forward<F>(f)};
+}
+
 std::vector<u8> read_file_binary(const char* name);
 std::span<u8> read_file_binary(vke::ArenaAllocator* arena, const char* name);
 
