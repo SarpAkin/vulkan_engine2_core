@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #ifndef _WIN32
 #include <alloca.h>
 #else
@@ -125,6 +126,16 @@ T round_up_to_multiple(const T& value, const T& multiple) {
 
 template <typename T, size_t N>
 constexpr size_t array_len(const T (&array)[N]) { return N; }
+
+template <class K, class T>
+std::optional<T> at(const std::unordered_map<K, T>& map, const K& key) {
+    auto it = map.find(key);
+    if (it != map.end()) {
+        return std::make_optional(it->second);
+    } else {
+        return std::nullopt;
+    }
+}
 
 } // namespace vke
 
