@@ -115,6 +115,16 @@ std::string_view read_file(vke::ArenaAllocator* arena, const char* name);
 
 std::span<u32> cast_u8_to_span_u32(std::span<u8> span);
 
+template <class ToType, class FromType>
+std::span<ToType> span_cast(std::span<FromType> span) {
+    return std::span<ToType>(reinterpret_cast<ToType*>(span.data()), span.size_bytes() / sizeof(ToType));
+}
+
+template <class ToType, class FromType>
+std::span<const ToType> span_cast(std::span<const FromType> span) {
+    return std::span<const ToType>(reinterpret_cast<const ToType*>(span.data(), span.size_bytes() / sizeof(ToType)));
+}
+
 std::string relative_path_impl(const char* source_path, const char* path);
 
 void trace_stack(FILE* stream = stderr);
