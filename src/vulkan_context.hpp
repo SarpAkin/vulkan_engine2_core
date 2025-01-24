@@ -1,9 +1,11 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <vulkan/vulkan.h>
 
 #include "common.hpp"
+#include "fwd.hpp"
 
 typedef struct VmaAllocator_T* VmaAllocator;
 typedef struct VmaAllocation_T* VmaAllocation;
@@ -40,6 +42,8 @@ public:
     DeviceInfo* get_device_info()const { return m_device_info.get(); }
 
     VkFence get_thread_local_fence();
+
+    void immediate_submit(std::function<void(vke::CommandBuffer& cmd)> function);
 
 private:
     void init_context(const ContextConfig& config);

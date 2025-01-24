@@ -7,9 +7,11 @@
 
 #include <VkBootstrap.h>
 
+#include "commandbuffer.hpp"
 #include "builders/descriptor_set_layout_builder.hpp"
 #include "fence.hpp"
 #include "util/util.hpp"
+#include "vkutil.hpp"
 
 namespace vke {
 
@@ -183,5 +185,30 @@ VkFence VulkanContext::get_thread_local_fence() {
 
     return thread_local_fence->handle();
 }
+
+void VulkanContext::immediate_submit(std::function<void(vke::CommandBuffer& cmd)> function) {
+    vke::CommandBuffer cmd;
+
+    cmd.begin();
+    function(cmd);
+    cmd.end();
+
+    VkSubmitInfo info{
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+
+        .commandBufferCount = 1,
+        .pCommandBuffers    = &cmd.handle(),
+    };
+
+    CommandBuffer* cmds[] = {&cmd};
+
+    VkFence fence = get_thread_local_fence();
+
+    VK_CHECK(vkQueueSubmit(get_graphics_queue(), 1, &info, fence));
+
+    VK_CHECK(vkWaitForFences(get_device(), 1, &fence, VK_TRUE, 1E10));
+    VK_CHECK(vkResetFences(get_device(), 1, &fence));
+}
+
 
 } // namespace vke
