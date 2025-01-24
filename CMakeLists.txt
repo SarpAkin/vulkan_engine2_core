@@ -36,7 +36,6 @@ target_include_directories(vke PUBLIC
     ${Vulkan_INCLUDE_DIRS} 
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/ 
     ${VKE_INCLUDE} 
-    ${CMAKE_CURRENT_SOURCE_DIR}/submodules/cereal/include
     ${SHADERC_INCLUDE_DIRS}
 )
 
