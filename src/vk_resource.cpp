@@ -19,7 +19,7 @@ RCResource<Resource> Resource::get_reference() {
 
     assert(ref.get() != nullptr);
 
-    return RCResource(this);
+    return ref;
 }
 
 RCResource<Resource> Resource::try_get_reference() {
