@@ -92,6 +92,13 @@ void CommandBuffer::bind_pipeline(IPipeline* pipeline) {
     m_current_pipeline = pipeline;
 }
 
+void CommandBuffer::bind_vertex_buffer(const std::span<const IBufferSpan*>& buffer) {
+    auto handles = MAP_VEC_ALLOCA(buffer, [](const IBufferSpan* buffer) { return buffer->handle(); });
+    auto offsets = MAP_VEC_ALLOCA(buffer, [](const IBufferSpan* buffer) { return (VkDeviceSize)buffer->byte_offset(); });
+
+    vkCmdBindVertexBuffers(handle(), 0, buffer.size(), handles.data(), offsets.data());
+}
+
 void CommandBuffer::bind_vertex_buffer(const std::initializer_list<const IBufferSpan*>& buffer) {
     auto handles = MAP_VEC_ALLOCA(buffer, [](const IBufferSpan* buffer) { return buffer->handle(); });
     auto offsets = MAP_VEC_ALLOCA(buffer, [](const IBufferSpan* buffer) { return (VkDeviceSize)buffer->byte_offset(); });
