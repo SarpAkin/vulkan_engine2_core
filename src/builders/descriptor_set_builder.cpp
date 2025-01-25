@@ -61,6 +61,23 @@ DescriptorSetBuilder& DescriptorSetBuilder::add_image_samplers(std::span<IImageV
     return *this;
 }
 
+DescriptorSetBuilder& DescriptorSetBuilder::add_image_samplers(std::span<std::pair<IImageView*, VkSampler>> images, VkImageLayout layout, VkShaderStageFlags stage) {
+    m_image_bindings.push_back(ImageBinding{
+        .image_infos = map_vec(images, [&](const std::pair<IImageView*, VkSampler_T*>& pair) {
+        auto& [image, sampler] = pair;
+
+        return VkDescriptorImageInfo{
+            .sampler     = sampler,
+            .imageView   = image->view(),
+            .imageLayout = layout,
+        };
+    }),
+        .binding     = m_binding_counter++,
+        .type        = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    });
+
+    return *this;
+}
 
 VkDescriptorSet DescriptorSetBuilder::build(DescriptorPool* pool, VkDescriptorSetLayout layout) {
 
