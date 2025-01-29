@@ -28,7 +28,7 @@ public:
     friend Fence;
 
     CommandBuffer(bool is_primary = true, int queue_family_index = -1);
-    CommandBuffer(VkCommandBuffer cmd,bool is_renderpass = false, bool is_primary = false);
+    CommandBuffer(VkCommandBuffer cmd, bool is_renderpass = false, bool is_primary = false);
 
     ~CommandBuffer();
 
@@ -99,15 +99,19 @@ public:
     void pipeline_barrier(const PipelineBarrierArgs& args);
 
 private:
+    void flush_postponed_descriptor_sets();
+
+private:
     VkCommandBuffer m_cmd;
     VkCommandPool m_cmd_pool;
     bool m_is_external = false;
 
     std::vector<RCResource<Resource>> m_dependent_resources;
     std::vector<VkSemaphore> m_wait_semaphores;
+    std::vector<std::pair<u32, VkDescriptorSet>> m_postponed_set_binds;
 
     VkPipelineBindPoint m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
-    IPipeline* m_current_pipeline                 = nullptr;
+    IPipeline* m_current_pipeline                = nullptr;
 };
 
 } // namespace vke

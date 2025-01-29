@@ -54,7 +54,7 @@ void CommandBuffer::end() {
 
 void CommandBuffer::reset() {
     VK_CHECK(vkResetCommandBuffer(m_cmd, 0));
-    m_current_pipeline = nullptr;
+    m_current_pipeline       = nullptr;
     m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
 
     m_wait_semaphores.clear();
@@ -65,31 +65,38 @@ std::span<VkSemaphore> CommandBuffer::get_wait_semaphores() {
     return m_wait_semaphores;
 }
 
-
 // VkCmd** wrappers
 void CommandBuffer::cmd_begin_renderpass(const VkRenderPassBeginInfo* pRenderPassBegin, VkSubpassContents contents) {
     vkCmdBeginRenderPass(handle(), pRenderPassBegin, contents);
     m_current_pipeline_state = VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+    m_postponed_set_binds.clear();
 }
 
 void CommandBuffer::cmd_next_subpass(VkSubpassContents contents) {
     vkCmdNextSubpass(handle(), contents);
+
+    m_postponed_set_binds.clear();
 }
 
 void CommandBuffer::cmd_end_renderpass() {
     vkCmdEndRenderPass(handle());
     m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
+
+    m_postponed_set_binds.clear();
 }
 
 void CommandBuffer::bind_pipeline(IPipeline* pipeline) {
-    if(m_current_pipeline == pipeline) return;
+    if (m_current_pipeline == pipeline) return;
 
-    if(auto rc_ref = pipeline->try_get_reference()) {
+    if (auto rc_ref = pipeline->try_get_reference()) {
         m_dependent_resources.push_back(std::move(rc_ref));
     }
 
     pipeline->bind(*this);
     m_current_pipeline = pipeline;
+
+    flush_postponed_descriptor_sets();
 }
 
 void CommandBuffer::bind_vertex_buffer(const std::span<const IBufferSpan*>& buffer) {
@@ -111,9 +118,12 @@ void CommandBuffer::bind_index_buffer(const IBufferSpan* buffer, VkIndexType ind
 }
 
 void CommandBuffer::bind_descriptor_set(u32 index, VkDescriptorSet set) {
-    assert(m_current_pipeline != nullptr && "a pipeline must be bound first before binding a set");
-
-    vkCmdBindDescriptorSets(handle(), m_current_pipeline_state, m_current_pipeline->layout(), index, 1, &set, 0, nullptr);
+    // assert(m_current_pipeline != nullptr && "a pipeline must be bound first before binding a set");
+    if (m_current_pipeline != nullptr) {
+        vkCmdBindDescriptorSets(handle(), m_current_pipeline_state, m_current_pipeline->layout(), index, 1, &set, 0, nullptr);
+    } else {
+        m_postponed_set_binds.push_back(std::pair(index, set));
+    }
 }
 
 void CommandBuffer::push_constant(u32 size, const void* pValues) {
@@ -163,11 +173,11 @@ void CommandBuffer::draw_mesh_tasks(u32 group_count_x, u32 group_count_y, u32 gr
 
 thread_local static PFN_vkCmdDrawMeshTasksIndirectEXT _vkCmdDrawMeshTasksIndirectEXT = nullptr;
 void CommandBuffer::draw_mesh_tasks_indirect(const IBufferSpan* buffer, u32 draw_count, u32 stride) {
-    if(_vkCmdDrawMeshTasksIndirectEXT == nullptr) {
+    if (_vkCmdDrawMeshTasksIndirectEXT == nullptr) {
         _vkCmdDrawMeshTasksIndirectEXT = (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(device(), "vkCmdDrawMeshTasksIndirectEXT");
         assert(_vkCmdDrawMeshTasksIndirectEXT && "vkCmdDrawMeshTasksIndirectEXT not available");
     }
-    
+
     _vkCmdDrawMeshTasksIndirectEXT(handle(), buffer->handle(), buffer->byte_offset(), draw_count, stride);
 }
 
@@ -246,16 +256,26 @@ void CommandBuffer::execute_secondries(std::span<const CommandBuffer*> cmds) {
     vkCmdExecuteCommands(handle(), handles.size(), handles.data());
 }
 
-CommandBuffer::CommandBuffer(VkCommandBuffer cmd,bool is_renderpass, bool is_primary) {
+CommandBuffer::CommandBuffer(VkCommandBuffer cmd, bool is_renderpass, bool is_primary) {
     m_cmd         = cmd;
     m_cmd_pool    = VK_NULL_HANDLE;
     m_is_external = true;
 
-    if(is_renderpass) {
+    if (is_renderpass) {
         m_current_pipeline_state = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    }else{
+    } else {
         m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
     }
 }
 
+void CommandBuffer::flush_postponed_descriptor_sets() {
+    if(m_postponed_set_binds.empty()) return;
+
+    auto layout = m_current_pipeline->layout();
+    for (auto& [index, set] : m_postponed_set_binds) {
+        vkCmdBindDescriptorSets(handle(), m_current_pipeline_state, layout, index, 1, &set, 0, nullptr);
+    }
+
+    m_postponed_set_binds.clear();
+}
 } // namespace vke
