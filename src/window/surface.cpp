@@ -124,8 +124,8 @@ bool Surface::present() {
     m_current_prepare_semaphore = nullptr;
     auto result                 = vkQueuePresentKHR(VulkanContext::get_context()->get_graphics_queue(), &presentInfo);
 
-    if (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR) return true;
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) return false;
+    if (result == VK_SUCCESS) return true;
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) return false;
 
     VK_CHECK(result);
     return false;
