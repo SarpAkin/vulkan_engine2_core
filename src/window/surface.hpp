@@ -47,10 +47,7 @@ public: // getters
     bool prepare(u64 time_out = UINT64_MAX);
     bool present();
 
-    void recrate_swapchain() {
-        printf("recrating swapchin!\n");
-        init_swapchain();
-    }
+    void recrate_swapchain();
 
     u32 get_swapchain_image_index() const { return m_swapchain_image_index; }
 

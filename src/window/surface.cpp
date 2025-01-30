@@ -137,4 +137,8 @@ u32 Surface::height() const {
 u32 Surface::width() const {
     return m_window->width();
 }
+void Surface::recrate_swapchain() {
+    printf("recrating swapchin! window size: (%d,%d)\n", width(), height());
+    init_swapchain();
+}
 } // namespace vke
