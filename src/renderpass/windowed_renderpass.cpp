@@ -24,12 +24,7 @@ WindowRenderPass::WindowRenderPass(Window* window, bool has_depth) {
     if (has_depth) m_clear_values.push_back({VkClearValue{.depthStencil = VkClearDepthStencilValue{.depth = 1.0}}});
 
     if (has_depth) {
-        m_depth = std::make_unique<vke::Image>(ImageArgs{
-            .format      = VK_FORMAT_D16_UNORM,
-            .usage_flags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-            .width       = width(),
-            .height      = height(),
-        });
+        create_depth_buffer();
     }
 
     init_renderpass();
@@ -148,11 +143,22 @@ void WindowRenderPass::begin(CommandBuffer& cmd) {
         resize(cmd, surface->width(), surface->height());
     }
 
+    cmd.add_execution_dependency(m_framebuffers[m_window->surface()->get_swapchain_image_index()]->get_reference());
+    if (m_depth) {
+        cmd.add_execution_dependency(m_depth->get_reference());
+    }
+
     Renderpass::begin(cmd);
 }
 
 void WindowRenderPass::resize(CommandBuffer& cmd, u32 width, u32 height) {
     destroy_framebuffers();
+    // m_window->surface()->recrate_swapchain();
+    m_width  = width;
+    m_height = height;
+
+    if (m_depth) create_depth_buffer();
+
     create_framebuffers();
 }
 
@@ -160,5 +166,13 @@ void WindowRenderPass::add_framebuffers_as_dependency(vke::CommandBuffer& cmd) {
     for (auto& fb : m_framebuffers) {
         cmd.add_execution_dependency(fb->get_reference());
     }
+}
+void WindowRenderPass::create_depth_buffer() {
+    m_depth = std::make_unique<vke::Image>(ImageArgs{
+        .format      = VK_FORMAT_D16_UNORM,
+        .usage_flags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        .width       = width(),
+        .height      = height(),
+    });
 }
 } // namespace vke

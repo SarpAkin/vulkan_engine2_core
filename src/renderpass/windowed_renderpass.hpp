@@ -2,6 +2,8 @@
 
 #include "renderpass.hpp"
 
+#include <vke/vke.hpp>
+
 namespace vke{
 
 class WindowRenderPass : public Renderpass {
@@ -15,6 +17,7 @@ public:
     bool has_depth(u32 subpass) override { return true; }
 
 private:
+    void create_depth_buffer();
     void init_renderpass();
     void create_framebuffers();
     void destroy_framebuffers();
@@ -25,7 +28,7 @@ private:
 private:
     Window* m_window = nullptr;
     std::vector<RCResource<impl::Framebuffer>> m_framebuffers;
-    std::unique_ptr<vke::Image> m_depth;
+    vke::RCResource<vke::Image> m_depth;
     std::vector<VkImageView> m_swapchain_image_views;
 };
 
