@@ -28,6 +28,9 @@ void Surface::init_swapchain() {
         destroy_swapchain();
     }
 
+    m_width = vkb_swapchain.extent.width;
+    m_height = vkb_swapchain.extent.height;
+
     m_swapchain_image_format = vkb_swapchain.image_format;
     m_swapchain              = vkb_swapchain.swapchain;
     m_swapchain_image_views  = vkb_swapchain.get_image_views().value();
@@ -132,10 +135,10 @@ bool Surface::present() {
 }
 
 u32 Surface::height() const {
-    return m_window->height();
+    return m_height;
 }
 u32 Surface::width() const {
-    return m_window->width();
+    return m_width;
 }
 void Surface::recrate_swapchain() {
     printf("recrating swapchin! window size: (%d,%d)\n", width(), height());
