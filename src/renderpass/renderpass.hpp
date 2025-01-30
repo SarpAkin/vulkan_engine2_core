@@ -59,7 +59,7 @@ protected:
     virtual VkFramebuffer next_framebuffer() = 0;
 
 protected:
-    bool m_is_external;
+    bool m_is_external = false;
     u32 m_width, m_height;
     VkRenderPass m_renderpass = nullptr; // should be destroyed by this class, created by child class.
     IRenderTargetSize* m_target_size = nullptr;
