@@ -18,7 +18,7 @@ WindowRenderPass::WindowRenderPass(Window* window, bool has_depth) {
     m_width       = window->width();
     m_height      = window->height();
     m_window      = window;
-    m_target_size = window;
+    // m_target_size = window;
 
     m_clear_values = {VkClearValue{.color = VkClearColorValue{0.f, 0.f, 1.f, 0.f}}};
     if (has_depth) m_clear_values.push_back({VkClearValue{.depthStencil = VkClearDepthStencilValue{.depth = 1.0}}});
