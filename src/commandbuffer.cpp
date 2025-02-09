@@ -96,9 +96,6 @@ void CommandBuffer::bind_pipeline(IPipeline* pipeline) {
         m_dependent_resources.push_back(std::move(rc_ref));
     }
 
-    pipeline->bind(*this);
-    m_current_pipeline = pipeline;
-
     flush_postponed_descriptor_sets();
 }
 
@@ -272,7 +269,7 @@ CommandBuffer::CommandBuffer(VkCommandBuffer cmd, bool is_renderpass, bool is_pr
 }
 
 void CommandBuffer::flush_postponed_descriptor_sets() {
-    if(m_postponed_set_binds.empty()) return;
+    if (m_postponed_set_binds.empty()) return;
 
     auto layout = m_current_pipeline->layout();
     for (auto& [index, set] : m_postponed_set_binds) {
