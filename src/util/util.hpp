@@ -41,7 +41,9 @@ void name_thread(std::thread& thread, const char* name);
 
 auto map_vec(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin()))> results;
-    results.reserve(vector.size());
+    if constexpr (requires { vector.size(); }) {
+        results.reserve(vector.size());
+    }
     for (const auto& element : vector) {
         results.push_back(f(element));
     }
@@ -51,7 +53,9 @@ auto map_vec(auto&& vector, auto&& f) {
 
 auto map_vec_indicies(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin(), 0))> results;
-    results.reserve(vector.size());
+    if constexpr (requires { vector.size(); }) {
+        results.reserve(vector.size());
+    }
     int i = 0;
     for (const auto& element : vector) {
         results.push_back(f(element, i));
