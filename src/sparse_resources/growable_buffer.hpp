@@ -16,7 +16,7 @@ public:
     IBuffer* vke_buffer() override { return this; };
     const IBuffer* vke_buffer() const override { return this; }
     VkBuffer handle() const override { return m_buffer; }
-    std::span<u8> mapped_data_bytes() override { assert(!"mapping not supported"); }
+    std::span<u8> mapped_data_bytes() override;
 
     usize bind_size() const override { return VK_WHOLE_SIZE; }
 

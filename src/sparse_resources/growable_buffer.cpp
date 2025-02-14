@@ -112,4 +112,8 @@ void GrowableBuffer::resize(usize new_size) {
 
     // LOG_INFO("waited %fµs for sparse buffer bind", static_cast<double>(duration) / 1E3);
 }
+std::span<u8> GrowableBuffer::mapped_data_bytes() {
+    assert(!"mapping not supported");
+    return std::span<u8>();
+}
 } // namespace vke
