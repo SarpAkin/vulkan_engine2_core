@@ -23,6 +23,8 @@
 
 #include "arena_alloc.hpp"
 
+#include "slim_vec.hpp"
+
 #include <cstdio>
 #include <stdexcept> // IWYU pragma: export
 
@@ -41,6 +43,19 @@ void name_thread(std::thread& thread, const char* name);
 
 auto map_vec(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin()))> results;
+    if constexpr (requires { vector.size(); }) {
+        results.reserve(vector.size());
+    }
+    for (const auto& element : vector) {
+        results.push_back(f(element));
+    }
+
+    return results;
+}
+
+template <size_t small_vec_size = 8>
+auto map_vec2small_vec(auto&& vector, auto&& f) {
+    vke::SmallVec<decltype(f(*vector.begin())), small_vec_size> results;
     if constexpr (requires { vector.size(); }) {
         results.reserve(vector.size());
     }
@@ -86,7 +101,7 @@ auto map_optional(const std::optional<T>& opt, auto&& func) -> std::optional<dec
     return std::nullopt;
 }
 
-//https://stackoverflow.com/questions/2067988/how-to-make-a-recursive-lambda
+// https://stackoverflow.com/questions/2067988/how-to-make-a-recursive-lambda
 template <class F>
 struct YCombinator {
     F f; // the lambda will be stored here
@@ -191,7 +206,7 @@ std::optional<T> at(const std::unordered_map<K, T>& map, const K& key) {
 //     return std::span(results, it);                                               \
 // }()
 
-#define MAP_VEC_ALLOCA(vector, ...) vke::map_vec(vector, __VA_ARGS__)
+#define MAP_VEC_ALLOCA(vector, ...) vke::map_vec2small_vec(vector, __VA_ARGS__)
 
 #ifdef _WIN32
 #define __PRETTY_FUNCTION__ __FUNCSIG__
