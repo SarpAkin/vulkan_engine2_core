@@ -13,7 +13,7 @@
 
 namespace vke {
 
-template <class T, bool smallVec = false>
+template <class T, bool smallVec = false, size_t desired_stack_slots = 0>
 class SlimVec {
 public:
     using iterator       = T*;
@@ -69,8 +69,8 @@ public: // c'tors
     }
 
 public:
-    T* data(T* data) { return _data(); }
-    const T* data(T* data) const { return _data(); }
+    T* data() { return _data(); }
+    const T* data() const { return _data(); }
 
     T& operator[](size_t index) { return _data()[index]; }
     const T& operator[](size_t index) const { return _data()[index]; }
@@ -246,12 +246,6 @@ private:
     }
 
 private:
-    constexpr static size_t _small_vec_byte_space    = offsetof(SlimVec, m_size);
-    constexpr static size_t _small_vec_item_capacity = _small_vec_byte_space / sizeof(T);
-    constexpr static bool _small_vec                 = smallVec && _small_vec_item_capacity >= 1;
-    constexpr static uint32_t _small_vec_base_size   = UINT32_MAX - (_small_vec_item_capacity + 1);
-
-private:
     void _cleanup() {
         T* data = _data();
 
@@ -370,7 +364,7 @@ private:
         }
     }
 
-    // Does not set m_size manualy
+    // Do not set m_size manualy
     void _set_size(uint32_t size) {
         if (is_small_vec()) {
             assert(size <= _small_vec_item_capacity);
@@ -381,12 +375,30 @@ private:
         }
     }
 
+private:
+    static constexpr size_t calculate_data_array_size() {
+        if (smallVec == false) return 0;
+
+        size_t total_needed_space = (std::max(desired_stack_slots * sizeof(T), 12ul) - 12);
+
+        return (total_needed_space + 7) / 8;
+    }
+
+private:
+    constexpr static size_t _small_vec_byte_space    = offsetof(SlimVec, m_size);
+    constexpr static size_t _small_vec_item_capacity = _small_vec_byte_space / sizeof(T);
+    constexpr static bool _small_vec                 = smallVec && _small_vec_item_capacity >= 1;
+    constexpr static uint32_t _small_vec_base_size   = UINT32_MAX - (_small_vec_item_capacity + 1);
+
 private: // fields
-    T* m_data_ptr       = nullptr;
+    T* m_data_ptr = nullptr;
+    //on the small vec mode from the start of m_data_ptr to begining of m_size is use for storage
+    size_t m_extra_dummy_storage[calculate_data_array_size()];
     uint32_t m_capacity = 0, m_size = _small_vec ? _small_vec_base_size : 0;
 };
 
 template <class T, size_t MinStackSlots = 0>
-using SmallVec = SlimVec<T, true>;
+using SmallVec = SlimVec<T, true, MinStackSlots>;
+
 
 } // namespace vke
