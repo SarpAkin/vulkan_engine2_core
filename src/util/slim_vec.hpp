@@ -161,11 +161,11 @@ public:
     }
 
     void insert(const_iterator pos, const T& value) {
-        insert(std::distance(begin(), pos), value);
+        insert_at(std::distance(begin(), pos), value);
     }
 
     void insert(const_iterator pos, T&& value) {
-        insert(std::distance(begin(), pos), value);
+        insert_at(std::distance(begin(), pos), value);
     }
 
     void insert_at(size_t index, T&& value) {
