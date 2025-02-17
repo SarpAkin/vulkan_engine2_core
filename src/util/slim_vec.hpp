@@ -8,6 +8,7 @@
 #include <new>
 #include <optional>
 #include <span>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -75,6 +76,16 @@ public:
     T& operator[](size_t index) { return _data()[index]; }
     const T& operator[](size_t index) const { return _data()[index]; }
 
+    T& at(size_t index) {
+        if (index >= size()) throw std::out_of_range("out of range at method vke::SlimVec::at(size_t)");
+        return _data()[index];
+    }
+
+    const T& at(size_t index) const {
+        if (index >= size()) throw std::out_of_range("out of range at method vke::SlimVec::at(size_t)");
+        return _data()[index];
+    }
+
     iterator begin() { return _data(); }
     iterator end() { return _data() + _size(); }
     const_iterator begin() const { return cbegin(); }
@@ -100,6 +111,34 @@ public:
         _ensure_capacity_for_push_back();
 
         new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
+    void push_back_unchecked(T&& item) {
+        auto cur_size = _size();
+
+        assert(cur_size < _capacity());
+
+        new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
+    void push_back_unchecked(const T& item) {
+        auto cur_size = _size();
+
+        assert(cur_size < _capacity());
+
+        new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
+    template<class... Args>
+    void emplace_back(Args&&... args){
+        auto cur_size = _size();
+
+        _ensure_capacity_for_push_back();
+
+        new (_data() + cur_size) T(std::forward<Args>(args)...);
         _set_size(cur_size + 1);
     }
 
@@ -142,12 +181,17 @@ public:
         return item;
     }
 
+    template<class... Args>
+    void emplace(const_iterator pos,Args&&... args){
+        insert(pos,T(std::forward<Args>(args)...));
+    }
+
     void insert(const_iterator pos, const T& value) {
-        insert(std::distance(begin(), pos), value);
+        insert_at(std::distance(begin(), pos), value);
     }
 
     void insert(const_iterator pos, T&& value) {
-        insert(std::distance(begin(), pos), value);
+        insert_at(std::distance(begin(), pos), value);
     }
 
     void insert_at(size_t index, T&& value) {
@@ -225,8 +269,16 @@ public:
         _set_size(0);
     }
 
+    void swap(SlimVec& other) { std::swap(*this, other); }
+
+    T& back() { return *(end() - 1); }
+    const T& back() const { return *(end() - 1); }
+    T& front() { return *begin(); }
+    const T& front() const { return *begin(); }
+
     bool empty() const { return _size() == 0; }
     void shrink_to_fit() { /*TODO*/ }
+    constexpr size_t max_size() const { return _small_vec_base_size - 1; }
 
 private:
     void _ensure_capacity_for_push_back() {
@@ -364,7 +416,7 @@ private:
         }
     }
 
-    // Do not set m_size manualy
+    // Do not set m_size manually
     void _set_size(uint32_t size) {
         if (is_small_vec()) {
             assert(size <= _small_vec_item_capacity);
@@ -392,13 +444,12 @@ private:
 
 private: // fields
     T* m_data_ptr = nullptr;
-    //on the small vec mode from the start of m_data_ptr to begining of m_size is use for storage
+    // on the small vec mode, from the start of m_data_ptr to begining of m_size is used for storage
     size_t m_extra_dummy_storage[calculate_data_array_size()];
     uint32_t m_capacity = 0, m_size = _small_vec ? _small_vec_base_size : 0;
 };
 
 template <class T, size_t MinStackSlots = 0>
 using SmallVec = SlimVec<T, true, MinStackSlots>;
-
 
 } // namespace vke
