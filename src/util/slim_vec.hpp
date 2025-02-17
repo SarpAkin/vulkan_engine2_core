@@ -103,6 +103,24 @@ public:
         _set_size(cur_size + 1);
     }
 
+    void push_back_unchecked(T&& item) {
+        auto cur_size = _size();
+
+        assert(cur_size < _capacity());
+
+        new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
+    void push_back_unchecked(const T& item) {
+        auto cur_size = _size();
+
+        assert(cur_size < _capacity());
+
+        new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
     void reserve(size_t new_capacity) { _set_capacity(std::max(static_cast<uint32_t>(new_capacity), _size())); }
 
     void resize(size_t __new_size, const T& value = T()) {
