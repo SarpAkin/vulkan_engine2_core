@@ -3,8 +3,8 @@
 #include <cassert>
 #include <memory>
 #include <span>
-#include <vector>
 #include <string>
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 #include "../common.hpp"
@@ -74,6 +74,7 @@ public:
 
     void set_renderpass(ISubpass* subpass);
     void set_renderpass(VkRenderPass renderpass, u32 subpass_index, u32 attachment_count);
+    void set_subpass_name(const std::string& name) { m_subpass_name = name; }
 
     void set_topology(VkPrimitiveTopology topology);                                  // Set to triangle list by default
     void set_rasterization(VkPolygonMode polygon_mode, VkCullModeFlagBits cull_mode); // Set to Triangle Fill & No Cull
@@ -97,6 +98,8 @@ private:
     VkPipelineRasterizationStateCreateInfo m_rasterizer                        = {};
     VkPipelineMultisampleStateCreateInfo m_multisampling                       = {};
     std::vector<VkPipelineColorBlendAttachmentState> m_color_blend_attachments = {};
+
+    std::string m_subpass_name;
 };
 
 class CPipelineBuilder : public PipelineBuilderBase {
