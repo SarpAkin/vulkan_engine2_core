@@ -166,6 +166,28 @@ std::optional<T> at(const std::unordered_map<K, T>& map, const K& key) {
     }
 }
 
+template <class K, class T>
+const T* at_ptr(const std::unordered_map<K, T>& map, const K& key) {
+    auto it = map.find(key);
+    if (it != map.end()) {
+        return &it->second;
+    } else {
+        return nullptr;
+    }
+}
+
+template <class K, class T>
+T* at_ptr(std::unordered_map<K, T>& map, const K& key) {
+    auto it = map.find(key);
+    if (it != map.end()) {
+        return &it->second;
+    } else {
+        return nullptr;
+    }
+}
+
+
+
 } // namespace vke
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
