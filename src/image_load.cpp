@@ -33,7 +33,7 @@ std::unique_ptr<Image> Image::load_png(CommandBuffer& cmd, const char* path, u32
 
     // might leak pixels if an error is thrown
     RCResource<Buffer> stencil = std::make_unique<Buffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, buf_size, true);
-    memcpy(stencil->mapped_data_ptr(), pixels, buf_size);
+    memcpy(stencil->mapped_data<char>().data(), pixels, buf_size);
 
     stbi_image_free(pixels);
 
