@@ -10,6 +10,8 @@ namespace vke {
 template <typename T>
 class IDManager {
 public:
+    IDManager(uint64_t start_ids_from = 0) : m_id_counter(start_ids_from) {}
+
     uint64_t free_id_count() const { return m_freed_ids.size() + (std::numeric_limits<T>::max() - m_id_counter); }
 
     uint64_t id_count() const { return m_id_counter; }
