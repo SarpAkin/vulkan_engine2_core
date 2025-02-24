@@ -197,8 +197,8 @@ void CommandBuffer::pipeline_barrier(const PipelineBarrierArgs& args) {
         static_cast<uint32_t>(args.image_memory_barriers.size()), args.image_memory_barriers.data());
 }
 
-void CommandBuffer::copy_buffer(const vke::IBuffer* src_buffer, const vke::IBuffer* dst_bfufer, std::span<VkBufferCopy> regions) {
-    vkCmdCopyBuffer(handle(), src_buffer->handle(), dst_bfufer->handle(), static_cast<u32>(regions.size()), regions.data());
+void CommandBuffer::copy_buffer(const vke::IBuffer* src_buffer, const vke::IBuffer* dst_buffer, std::span<VkBufferCopy> regions) {
+    vkCmdCopyBuffer(handle(), src_buffer->handle(), dst_buffer->handle(), static_cast<u32>(regions.size()), regions.data());
 }
 void CommandBuffer::copy_buffer(const vke::IBufferSpan& src_span, const vke::IBufferSpan& dst_span) {
     VkBufferCopy copies[] = {
@@ -212,7 +212,7 @@ void CommandBuffer::copy_buffer(const vke::IBufferSpan& src_span, const vke::IBu
     copy_buffer(src_span.vke_buffer(), dst_span.vke_buffer(), copies);
 }
 
-// void CommandBuffer::begin_secondry(Renderpass* renderpass, u32 subpass) {
+// void CommandBuffer::begin_secondary(Renderpass* renderpass, u32 subpass) {
 //     VkCommandBufferInheritanceInfo inheritance_info{
 //         .sType      = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
 //         .renderPass = renderpass->handle(),
