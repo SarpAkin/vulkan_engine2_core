@@ -96,6 +96,9 @@ public:
     operator std::span<T>() { return {_data(), _size()}; }
     operator std::span<const T>() const { return {_data(), _size()}; }
 
+    std::span<T> as_span() { return {data(), size()}; }
+    std::span<const T> as_const_span() { return {data(), size()}; }
+
     void push_back(T&& item) {
         auto cur_size = _size();
 
@@ -132,8 +135,8 @@ public:
         _set_size(cur_size + 1);
     }
 
-    template<class... Args>
-    void emplace_back(Args&&... args){
+    template <class... Args>
+    void emplace_back(Args&&... args) {
         auto cur_size = _size();
 
         _ensure_capacity_for_push_back();
@@ -181,9 +184,9 @@ public:
         return item;
     }
 
-    template<class... Args>
-    void emplace(const_iterator pos,Args&&... args){
-        insert(pos,T(std::forward<Args>(args)...));
+    template <class... Args>
+    void emplace(const_iterator pos, Args&&... args) {
+        insert(pos, T(std::forward<Args>(args)...));
     }
 
     void insert(const_iterator pos, const T& value) {
