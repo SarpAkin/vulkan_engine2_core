@@ -153,8 +153,29 @@ T round_up_to_multiple(const T& value, const T& multiple) {
     return ((value + (multiple - 1)) / multiple) * multiple;
 }
 
+template <class To, class From>
+To checked_integer_cast(From n) {
+    if constexpr (std::numeric_limits<From>::max() > std::numeric_limits<To>::max()) {
+        assert(n > std::numeric_limits<To>::max());
+    }
+
+    if constexpr (std::numeric_limits<From>::min() < std::numeric_limits<To>::min()) {
+        assert(n < std::numeric_limits<To>::min());
+    }
+
+    return static_cast<To>(n);
+}
+
 template <typename T, size_t N>
 constexpr size_t array_len(const T (&array)[N]) { return N; }
+
+template<class T>
+T fold(auto&& container,T initial,auto&& function){
+    for(auto& e : container){
+        initial = function(initial,e);
+    }
+    return initial;
+}
 
 template <class K, class T>
 std::optional<T> at(const std::unordered_map<K, T>& map, const K& key) {
@@ -185,8 +206,6 @@ T* at_ptr(std::unordered_map<K, T>& map, const K& key) {
         return nullptr;
     }
 }
-
-
 
 } // namespace vke
 
