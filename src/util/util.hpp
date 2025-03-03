@@ -141,7 +141,7 @@ std::span<ToType> span_cast(std::span<FromType> span) {
 
 template <class ToType, class FromType>
 std::span<const ToType> span_cast(std::span<const FromType> span) {
-    return std::span<const ToType>(reinterpret_cast<const ToType*>(span.data(), span.size_bytes() / sizeof(ToType)));
+    return std::span<const ToType>(reinterpret_cast<const ToType*>(span.data()), span.size_bytes() / sizeof(ToType));
 }
 
 std::string relative_path_impl(const char* source_path, const char* path);
