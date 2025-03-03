@@ -35,16 +35,27 @@ public: // c'tors
         return *this;
     }
 
-    SlimVec& operator=(const std::vector<T>& std_vec) {
-        clear();
-        reserve(std_vec.size());
-        for (const auto& e : std_vec) {
-            push_back(e);
-        }
+    template <class Container>
+    SlimVec(Container&& val) { assign(std::forward<Container>(val)); }
+
+    template <class Container>
+    SlimVec& operator=(Container&& val) {
+        assign(std::forward<Container>(val));
         return *this;
     }
 
-    SlimVec(const std::vector<T>& std_vec) {
+    SlimVec& operator=(const std::initializer_list<T>& iterable) {
+        assign(iterable);
+        return *this;
+    }
+
+    SlimVec(const std::initializer_list<T>& iterable) { assign(iterable); }
+
+public:
+    void assign(const SlimVec& other) { _copy_from(other); }
+    void assign(SlimVec&& other) { _move_from(std::move(other)); }
+
+    void assign(const std::vector<T>& std_vec) {
         clear();
         reserve(std_vec.size());
         for (const auto& e : std_vec) {
@@ -52,16 +63,16 @@ public: // c'tors
         }
     }
 
-    SlimVec& operator=(const std::initializer_list<T>& iterable) {
+    void assign(const std::initializer_list<T>& iterable) {
         clear();
         reserve(std::distance(iterable.begin(), iterable.end()));
         for (const auto& e : iterable) {
             push_back(e);
         }
-        return *this;
     }
 
-    SlimVec(const std::initializer_list<T>& iterable) {
+    template <class Iterable>
+    void assign(Iterable&& iterable) {
         clear();
         reserve(std::distance(iterable.begin(), iterable.end()));
         for (const auto& e : iterable) {
