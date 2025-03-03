@@ -166,13 +166,27 @@ To checked_integer_cast(From n) {
     return static_cast<To>(n);
 }
 
-template <typename T, size_t N>
+template <class T, size_t N>
+using CArray = T[N];
+
+template <class T, size_t N>
 constexpr size_t array_len(const T (&array)[N]) { return N; }
 
-template<class T>
-T fold(auto&& container,T initial,auto&& function){
-    for(auto& e : container){
-        initial = function(initial,e);
+template <class T, size_t N>
+void set_array(CArray<T, N>& array, auto&& function) {
+    for (int i = 0; i < N; i++) {
+        if constexpr (requires { function(i); }){
+            array[i] = function(i);
+        }else{
+            array[i] = function();
+        }
+    }
+}
+
+template <class T>
+T fold(auto&& container, T initial, auto&& function) {
+    for (auto& e : container) {
+        initial = function(initial, e);
     }
     return initial;
 }
