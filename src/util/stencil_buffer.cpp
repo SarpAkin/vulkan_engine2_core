@@ -57,5 +57,9 @@ void StencilBuffer::flush_copies(vke::CommandBuffer& cmd) {
         auto [dst_buffer, src_buffer] = buffer_pair;
         cmd.copy_buffer(src_buffer, dst_buffer, copies);
     }
+
+    for(auto buffer : m_buffers){
+        cmd.add_execution_dependency(buffer->get_reference());
+    }    
 }
 } // namespace vke

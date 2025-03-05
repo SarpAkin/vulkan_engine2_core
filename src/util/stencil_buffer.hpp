@@ -44,7 +44,7 @@ private:
 
     // pair as dst buffer,src buffer
     std::unordered_map<std::pair<IBuffer*, IBuffer*>, vke::SlimVec<VkBufferCopy>> m_copies;
-    std::vector<std::unique_ptr<vke::Buffer>> m_buffers;
+    std::vector<RCResource<vke::Buffer>> m_buffers;
     u32 m_top             = 0;
     u32 m_buffer_capacity = 0;
     bool m_growable;
