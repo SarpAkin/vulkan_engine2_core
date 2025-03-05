@@ -35,5 +35,5 @@ class IPipelineLoader;
 class IPipeline;
 
 class Window;
-class RenderPass;
+class Renderpass;
 }
