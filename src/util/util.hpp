@@ -156,11 +156,11 @@ T round_up_to_multiple(const T& value, const T& multiple) {
 template <class To, class From>
 To checked_integer_cast(From n) {
     if constexpr (std::numeric_limits<From>::max() > std::numeric_limits<To>::max()) {
-        assert(n > std::numeric_limits<To>::max());
+        assert(n <= std::numeric_limits<To>::max());
     }
 
     if constexpr (std::numeric_limits<From>::min() < std::numeric_limits<To>::min()) {
-        assert(n < std::numeric_limits<To>::min());
+        assert(n >= std::numeric_limits<To>::min());
     }
 
     return static_cast<To>(n);
