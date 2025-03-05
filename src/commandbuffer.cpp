@@ -232,7 +232,7 @@ void CommandBuffer::copy_buffer(const vke::IBufferSpan& src_span, const vke::IBu
 //     renderpass->set_states(*this);
 // }
 
-void CommandBuffer::begin_secondry() {
+void CommandBuffer::begin_secondary() {
     VkCommandBufferInheritanceInfo inheritance_info{
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
     };
@@ -246,11 +246,11 @@ void CommandBuffer::begin_secondry() {
     VK_CHECK(vkBeginCommandBuffer(handle(), &info));
 }
 
-void CommandBuffer::execute_secondries(const CommandBuffer* cmd) {
+void CommandBuffer::execute_secondaries(const CommandBuffer* cmd) {
     vkCmdExecuteCommands(handle(), 1, &cmd->m_cmd);
 }
 
-void CommandBuffer::execute_secondries(std::span<const CommandBuffer*> cmds) {
+void CommandBuffer::execute_secondaries(std::span<const CommandBuffer*> cmds) {
     auto handles = MAP_VEC_ALLOCA(cmds, [](const CommandBuffer* cmd) { return cmd->m_cmd; });
 
     vkCmdExecuteCommands(handle(), handles.size(), handles.data());
