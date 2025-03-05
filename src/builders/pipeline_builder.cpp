@@ -258,7 +258,7 @@ void PipelineBuilderBase::add_shader_stage(std::string_view spirv_path) {
 }
 
 void GPipelineBuilder::set_renderpass(ISubpass* subpass) {
-    set_renderpass(subpass->get_renderpass(), subpass->get_subpass_index(), subpass->get_attachment_count());
+    set_renderpass(subpass->get_renderpass_handle(), subpass->get_subpass_index(), subpass->get_attachment_count());
 }
 void GPipelineBuilder::set_renderpass(VkRenderPass renderpass, u32 subpass_index, u32 attachment_count) {
     m_renderpass       = renderpass;

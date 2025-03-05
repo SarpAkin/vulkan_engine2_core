@@ -25,7 +25,7 @@ struct SubpassDetails final : public ISubpass {
 
 public:
     virtual u32 get_subpass_index() const override { return subpass_index; }
-    virtual VkRenderPass get_renderpass() const override;
+    virtual VkRenderPass get_renderpass_handle() const override;
     virtual u32 get_attachment_count() const override { return color_attachments.size(); };
     ~SubpassDetails() {};
     SubpassDetails()=default;
