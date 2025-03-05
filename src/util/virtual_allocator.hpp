@@ -20,6 +20,7 @@ public:
 public:
     std::optional<Allocation> allocate(u32 size, usize alignment = 1);
     void free(Allocation allocation);
+    void reset();
 
     VmaVirtualBlock get_virtual_block() { return m_virtual_block; }
 

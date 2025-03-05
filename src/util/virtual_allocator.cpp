@@ -13,13 +13,19 @@ std::optional<VirtualAllocator::Allocation> VirtualAllocator::allocate(u32 size,
     VmaVirtualAllocation alloc;
     VkDeviceSize offset;
     VkResult res = vmaVirtualAllocate(m_virtual_block, &alloc_info, &alloc, &offset);
-    if (res != VK_SUCCESS) return std::nullopt;
+    if (res != VK_SUCCESS) {
+        return std::nullopt;
+    }
 
     return Allocation{
         .allocation = alloc,
         .offset     = checked_integer_cast<u32>(offset),
         .size       = size,
     };
+}
+
+void VirtualAllocator::reset() {
+    vmaClearVirtualBlock(m_virtual_block);
 }
 
 VirtualAllocator::VirtualAllocator(u32 block_size) {
@@ -32,6 +38,11 @@ VirtualAllocator::VirtualAllocator(u32 block_size) {
 
 VirtualAllocator::~VirtualAllocator() {
     if (m_virtual_block) {
+        if (!vmaIsVirtualBlockEmpty(m_virtual_block)) {
+            LOG_WARNING("not all virtual allocations has been freed before the destruction of virtual allocator. either free each of them or call reset on virtual allocator");
+            vmaClearVirtualBlock(m_virtual_block);
+        }
+
         vmaDestroyVirtualBlock(m_virtual_block);
     }
 }
@@ -39,4 +50,5 @@ VirtualAllocator::~VirtualAllocator() {
 void VirtualAllocator::free(Allocation allocation) {
     vmaVirtualFree(m_virtual_block, allocation.allocation);
 }
+
 } // namespace vke
