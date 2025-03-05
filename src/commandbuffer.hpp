@@ -44,7 +44,7 @@ public:
     std::span<VkSemaphore> get_wait_semaphores();
 
     void begin_secondary();
-    // void begin_secondry(Renderpass* renderpass, u32 subpass);
+    void begin_secondary(ISubpass* subpass);
 
     void cmd_begin_renderpass(const VkRenderPassBeginInfo* pRenderPassBegin, VkSubpassContents contents);
     void cmd_next_subpass(VkSubpassContents contents);

@@ -4,6 +4,8 @@
 #include <initializer_list>
 #include <vulkan/vulkan_core.h>
 
+#include "renderpass/renderpass.hpp"
+#include "isubpass.hpp"
 #include "buffer.hpp"
 #include "fwd.hpp"
 #include "pipeline.hpp"
@@ -212,25 +214,27 @@ void CommandBuffer::copy_buffer(const vke::IBufferSpan& src_span, const vke::IBu
     copy_buffer(src_span.vke_buffer(), dst_span.vke_buffer(), copies);
 }
 
-// void CommandBuffer::begin_secondary(Renderpass* renderpass, u32 subpass) {
-//     VkCommandBufferInheritanceInfo inheritance_info{
-//         .sType      = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
-//         .renderPass = renderpass->handle(),
-//         .subpass    = subpass,
-//     };
+void CommandBuffer::begin_secondary(ISubpass* subpass) {
+    auto* renderpass = subpass->get_vke_renderpass();
+    
+    VkCommandBufferInheritanceInfo inheritance_info{
+        .sType      = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
+        .renderPass = subpass->get_renderpass_handle(),
+        .subpass    = subpass->get_subpass_index(),
+    };
 
-//     VkCommandBufferBeginInfo info{
-//         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-//         .flags            = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
-//         .pInheritanceInfo = &inheritance_info,
-//     };
+    VkCommandBufferBeginInfo info{
+        .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .flags            = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+        .pInheritanceInfo = &inheritance_info,
+    };
 
-//     m_current_pipeline_state = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    m_current_pipeline_state = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
-//     VK_CHECK(vkBeginCommandBuffer(handle(), &info));
+    VK_CHECK(vkBeginCommandBuffer(handle(), &info));
 
-//     renderpass->set_states(*this);
-// }
+    renderpass->set_states(*this);
+}
 
 void CommandBuffer::begin_secondary() {
     VkCommandBufferInheritanceInfo inheritance_info{
