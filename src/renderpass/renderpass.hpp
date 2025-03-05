@@ -27,8 +27,9 @@ public:
     virtual u32 get_subpass_index() const override { return subpass_index; }
     virtual VkRenderPass get_renderpass_handle() const override;
     virtual u32 get_attachment_count() const override { return color_attachments.size(); };
+    virtual vke::Renderpass* get_vke_renderpass() const override { return renderpass; }
     ~SubpassDetails() {};
-    SubpassDetails()=default;
+    SubpassDetails() = default;
 };
 
 // an abstarct renderpass class
@@ -61,7 +62,7 @@ protected:
 protected:
     bool m_is_external = false;
     u32 m_width, m_height;
-    VkRenderPass m_renderpass = nullptr; // should be destroyed by this class, created by child class.
+    VkRenderPass m_renderpass        = nullptr; // should be destroyed by this class, created by child class.
     IRenderTargetSize* m_target_size = nullptr;
     std::vector<VkClearValue> m_clear_values;
     std::vector<SubpassDetails> m_subpasses; // shouldn't be modified after creation. especially should't be resized since pointers to elements might be created.
