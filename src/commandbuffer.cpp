@@ -214,7 +214,7 @@ void CommandBuffer::copy_buffer(const vke::IBufferSpan& src_span, const vke::IBu
     copy_buffer(src_span.vke_buffer(), dst_span.vke_buffer(), copies);
 }
 
-void CommandBuffer::begin_secondary(ISubpass* subpass) {
+void CommandBuffer::begin_secondary(const ISubpass* subpass) {
     auto* renderpass = subpass->get_vke_renderpass();
     
     VkCommandBufferInheritanceInfo inheritance_info{
