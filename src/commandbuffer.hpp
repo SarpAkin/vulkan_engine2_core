@@ -96,6 +96,8 @@ public:
 
     void dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z);
 
+    void fill_buffer(vke::IBufferSpan& buffer_span, u32 data);
+
     void pipeline_barrier(const PipelineBarrierArgs& args);
 
 private:

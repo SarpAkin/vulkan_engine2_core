@@ -282,4 +282,7 @@ void CommandBuffer::flush_postponed_descriptor_sets() {
 
     m_postponed_set_binds.clear();
 }
+void CommandBuffer::fill_buffer(vke::IBufferSpan& buffer_span, u32 data) {
+    vkCmdFillBuffer(handle(), buffer_span.handle(), buffer_span.byte_offset(), buffer_span.byte_size(), data);
+}
 } // namespace vke
