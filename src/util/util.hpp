@@ -39,6 +39,10 @@ namespace fs = std::filesystem;
 
 class ArenaAllocator;
 
+constexpr u32 calculate_dispatch_size(u32 x,u32 subgroup_size){
+    return (x + (subgroup_size - 1)) / subgroup_size;
+}
+
 void name_thread(std::thread& thread, const char* name);
 
 auto map_vec(auto&& vector, auto&& f) {
