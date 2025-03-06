@@ -46,7 +46,7 @@ public:
 
 private:
     VmaVirtualBlock m_virtual_block = nullptr;
-    u32 m_capacity, m_max;
+    u32 m_capacity = 0, m_max = 0;
 };
 
 }; // namespace vke
