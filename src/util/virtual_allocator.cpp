@@ -11,15 +11,19 @@ std::optional<VirtualAllocator::Allocation> VirtualAllocator::allocate(u32 size,
     };
 
     VmaVirtualAllocation alloc;
-    VkDeviceSize offset;
-    VkResult res = vmaVirtualAllocate(m_virtual_block, &alloc_info, &alloc, &offset);
+    VkDeviceSize _offset;
+    VkResult res = vmaVirtualAllocate(m_virtual_block, &alloc_info, &alloc, &_offset);
     if (res != VK_SUCCESS) {
         return std::nullopt;
     }
 
+    u32 offset = checked_integer_cast<u32>(_offset);
+
+    m_max = std::max(m_max,offset + size);
+
     return Allocation{
         .allocation = alloc,
-        .offset     = checked_integer_cast<u32>(offset),
+        .offset     = offset,
         .size       = size,
     };
 }
@@ -32,6 +36,8 @@ VirtualAllocator::VirtualAllocator(u32 block_size) {
     VmaVirtualBlockCreateInfo info{
         .size = block_size,
     };
+
+    m_capacity = block_size;
 
     vmaCreateVirtualBlock(&info, &m_virtual_block);
 }

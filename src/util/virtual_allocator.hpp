@@ -22,6 +22,8 @@ public:
     void free(Allocation allocation);
     void reset();
 
+    u32 max_id() const { return m_max; }
+
     VmaVirtualBlock get_virtual_block() { return m_virtual_block; }
 
 public:
@@ -44,6 +46,7 @@ public:
 
 private:
     VmaVirtualBlock m_virtual_block = nullptr;
+    u32 m_capacity, m_max;
 };
 
 }; // namespace vke
