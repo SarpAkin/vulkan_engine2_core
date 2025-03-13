@@ -42,6 +42,9 @@ public:
     template <typename T>
     BufferSpan subspan_item(usize item_offset, usize item_count);
 
+    template <class T>
+    usize item_size() const { return byte_size() / sizeof(T); }
+
     virtual ~IBufferSpan() = default;
 };
 
