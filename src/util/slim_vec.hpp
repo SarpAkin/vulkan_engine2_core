@@ -21,6 +21,8 @@ public:
     using const_iterator = const T*;
 
 public: // c'tors
+    SlimVec(size_t size, const T& val) { resize(size, val); }
+
     SlimVec() = default;
     SlimVec(const SlimVec& other) { _copy_from(other); }
     SlimVec(SlimVec&& other) { _move_from(std::move(other)); }
