@@ -22,6 +22,7 @@ public:
 
 public: // c'tors
     SlimVec(size_t size, const T& val) { resize(size, val); }
+    SlimVec(size_t size) { resize(size, T()); }
 
     SlimVec() = default;
     SlimVec(const SlimVec& other) { _copy_from(other); }
