@@ -27,6 +27,7 @@ class Resource : public DeviceGetter {
     enum class OwnerShip {
         OWNED,
         RefCounted,
+        // external behaves like owned but when get_reference is called it returns the external resource it points to
         EXTERNAL,
     };
 
@@ -43,7 +44,7 @@ public:
     Resource& operator=(Resource&&)      = delete;
 
     bool is_reference_counted() const { return m_ownership == OwnerShip::RefCounted; }
-    // Must be refence counted or else it will assert
+    // Must be reference counted or else it will assert
     RCResource<Resource> get_reference();
 
     void set_external(Resource* external) {
@@ -141,7 +142,7 @@ public:
     operator bool() const { return !is_null(); }
 
 private:
-    // Unsafe consturctor that doesn't increment reference count
+    // Unsafe constructor that doesn't increment reference count
     RCResource(T* ptr) : m_ptr(ptr) {
     }
 
@@ -163,7 +164,7 @@ private:
 
         assert(res->is_reference_counted() == false);
 
-        res->m_ownership = Resource::OwnerShip::RefCounted;
+        if (res->m_ownership == Resource::OwnerShip::OWNED) res->m_ownership = Resource::OwnerShip::RefCounted;
         res->m_ref_count = 1;
 
         m_ptr = res_typed;
