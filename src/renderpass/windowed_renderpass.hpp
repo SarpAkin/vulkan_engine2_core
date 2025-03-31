@@ -4,7 +4,7 @@
 
 #include <vke/vke.hpp>
 
-namespace vke{
+namespace vke {
 
 class WindowRenderPass : public Renderpass {
 public:
@@ -12,9 +12,10 @@ public:
     ~WindowRenderPass();
 
     void begin(CommandBuffer& cmd) override;
-    void resize(CommandBuffer& cmd,u32 width, u32 height) override;
+    void resize(CommandBuffer& cmd, u32 width, u32 height) override;
 
     bool has_depth(u32 subpass) override { return true; }
+    IImageView* get_attachment_view(u32 index) override { return nullptr; }
 
 private:
     void create_depth_buffer();
@@ -32,4 +33,4 @@ private:
     std::vector<VkImageView> m_swapchain_image_views;
 };
 
-}
+} // namespace vke

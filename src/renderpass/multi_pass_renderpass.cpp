@@ -1,21 +1,38 @@
 #include "multi_pass_renderpass.hpp"
 
-#include <vke/util.hpp>
 #include "../image.hpp"
+#include <vke/util.hpp>
 
-#include "../window/window.hpp"
 #include "../window/surface.hpp"
+#include "../window/window.hpp"
 
 #include "renderpass_builder.hpp"
 
 namespace vke {
 
-MultiPassRenderPass::MultiPassRenderPass(RenderPassBuilder* builder, u32 width, u32 height)  {
+MultiPassRenderPass::MultiPassRenderPass(RenderPassBuilder* builder, u32 width, u32 height) {
     m_width  = width;
     m_height = height;
 
+    uint32_t subpass_index = 0;
+
     m_clear_values     = builder->m_clear_values;
     m_attachment_infos = builder->m_attachment_infos;
+    m_renderpass       = builder->create_vk_renderpass();
+
+    m_subpasses = vke::map_vec(builder->m_subpass_info, [&](const impl::SubpassInfo& info) {
+        SubpassDetails d;
+        d.renderpass        = this;
+        d.depth_format      = m_attachment_infos[info.depth_attachment->attachment].description.format;
+        d.color_attachments = vke::map_vec(info.color_attachments, [&](VkAttachmentReference c) {
+            return m_attachment_infos[c.attachment].description.format;
+        });
+        d.subpass_index     = subpass_index++;
+        return d;
+    });
+
+    create_attachments();
+    create_framebuffers();
 }
 
 void MultiPassRenderPass::create_attachments() {
@@ -82,7 +99,7 @@ void MultiPassRenderPass::destroy_framebuffers() {
 }
 
 VkFramebuffer MultiPassRenderPass::next_framebuffer() {
-    return m_framebuffers[m_window->surface()->get_swapchain_image_index()];
+    return m_window ? m_framebuffers[m_window->surface()->get_swapchain_image_index()] : m_framebuffers[0];
 }
 
 MultiPassRenderPass::~MultiPassRenderPass() {
@@ -90,11 +107,12 @@ MultiPassRenderPass::~MultiPassRenderPass() {
 }
 
 void MultiPassRenderPass::begin(CommandBuffer& cmd) {
-    if(m_has_surface_attachment){
+    if (m_has_surface_attachment) {
         m_window->surface()->prepare();
     }
 
     Renderpass::begin(cmd);
 }
 
+IImageView* MultiPassRenderPass::get_attachment_view(u32 index) { return m_attachments[index].image.get(); }
 } // namespace vke
