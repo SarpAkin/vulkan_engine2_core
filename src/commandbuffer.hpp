@@ -107,6 +107,7 @@ private:
     VkCommandBuffer m_cmd;
     VkCommandPool m_cmd_pool;
     bool m_is_external = false;
+    const vk::detail::DispatchLoaderDynamic* m_dt;
 
     std::vector<RCResource<Resource>> m_dependent_resources;
     std::vector<VkSemaphore> m_wait_semaphores;
