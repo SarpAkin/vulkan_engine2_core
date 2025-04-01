@@ -13,6 +13,8 @@ namespace vke {
 class DeviceGetter {
 protected:
     VkDevice device() const;
+    const vk::detail::DispatchLoaderDynamic& get_dispatch_table() const;
+
     static VulkanContext* get_context();
 
 public:

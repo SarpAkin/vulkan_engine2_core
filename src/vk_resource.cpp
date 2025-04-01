@@ -9,6 +9,11 @@ VkDevice DeviceGetter::device() const {
     return VulkanContext::get_context()->get_device();
 }
 
+const vk::detail::DispatchLoaderDynamic& DeviceGetter::get_dispatch_table() const {
+    return VulkanContext::get_context()->get_dispatch_table();
+}
+
+
 VulkanContext* DeviceGetter::get_context() { return VulkanContext::get_context(); }
 
 Resource::Resource() {}
