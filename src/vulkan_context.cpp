@@ -138,13 +138,12 @@ void VulkanContext::init_context(const ContextConfig& _config) {
 
     m_device = vkb_device_builder.build()->device;
 
-    m_handles->instance = m_instance;
-    m_handles->device = m_device;
+    m_handles->instance        = m_instance;
+    m_handles->device          = m_device;
     m_handles->physical_device = m_physical_device;
 
     load_dispatch_table(*m_handles, true);
 }
-
 
 void VulkanContext::init_vma_allocator(const ContextConfig& config) {
     VmaVulkanFunctions vulkan_functions = {
@@ -237,4 +236,8 @@ void VulkanContext::immediate_submit(std::function<void(vke::CommandBuffer& cmd)
     VK_CHECK(vkResetFences(get_device(), 1, &fence));
 }
 
+vk::Device VulkanContext::get_cpp_device() const { return m_device; }
+vk::Instance VulkanContext::get_cpp_instance() const { return m_instance; }
+vk::PhysicalDevice VulkanContext::get_cpp_physical_device() const { return m_physical_device; }
+const vk::detail::DispatchLoaderDynamic& VulkanContext::get_dispatch_table() const { return m_handles->dispatch_table; }
 } // namespace vke

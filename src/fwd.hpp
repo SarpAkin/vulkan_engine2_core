@@ -2,9 +2,7 @@
 
 namespace vke {
 
-
 class ISubpass;
-
 
 class VulkanContext;
 class Buffer;
@@ -12,7 +10,6 @@ class IBuffer;
 class GrowableBuffer;
 class IBufferSpan;
 class BufferSpan;
-
 
 class DescriptorPool;
 
@@ -36,4 +33,19 @@ class IPipeline;
 
 class Window;
 class Renderpass;
+} // namespace vke
+
+// vulkan-hpp fwds
+namespace vk {
+class Instance;
+class PhysicalDevice;
+class Device;
+class Image;
+class Buffer;
+class CommandBuffer;
+class CommandPool;
+
+namespace detail {
+class DispatchLoaderDynamic;
 }
+} // namespace vk

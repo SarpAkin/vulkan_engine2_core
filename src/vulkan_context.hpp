@@ -35,6 +35,11 @@ public:
     VkDevice get_device() { return m_device; }
     VkPhysicalDevice get_physical_device() { return m_physical_device; }
 
+    vk::Device get_cpp_device() const;
+    vk::Instance get_cpp_instance() const;
+    vk::PhysicalDevice get_cpp_physical_device() const;
+    const vk::detail::DispatchLoaderDynamic& get_dispatch_table() const;
+
     VmaAllocator gpu_allocator() { return m_allocator; }
 
     ~VulkanContext();
