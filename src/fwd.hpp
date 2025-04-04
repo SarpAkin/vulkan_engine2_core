@@ -14,6 +14,7 @@ class BufferSpan;
 class DescriptorPool;
 
 class CommandBuffer;
+class CommandPool;
 class Pipeline;
 class Image;
 class ImageView;
