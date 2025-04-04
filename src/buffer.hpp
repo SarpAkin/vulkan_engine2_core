@@ -41,11 +41,16 @@ public:
 
     template <typename T>
     BufferSpan subspan_item(usize item_offset, usize item_count);
+
+    template <class T>
+    usize item_size() const { return byte_size() / sizeof(T); }
+
+    virtual ~IBufferSpan() = default;
 };
 
 class IBuffer : public IBufferSpan {
 public:
-
+    virtual ~IBuffer() = default;
 protected:
 };
 
@@ -59,7 +64,7 @@ public:
     template <typename T = void>
     [[deprecated("use mapped_data")]]
     inline T* mapped_data_ptr() const { return reinterpret_cast<T*>(m_mapped_data); }
-    
+
     template <typename T>
     // [[deprecated("use mapped_data")]]
     inline std::span<T> mapped_data_as_span() {

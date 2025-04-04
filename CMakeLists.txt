@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.24)
 
 project(vke)
 
-set(CMAKE_BUILD_TYPE Debug)
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
@@ -36,7 +34,6 @@ target_include_directories(vke PUBLIC
     ${Vulkan_INCLUDE_DIRS} 
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/ 
     ${VKE_INCLUDE} 
-    ${CMAKE_CURRENT_SOURCE_DIR}/submodules/cereal/include
     ${SHADERC_INCLUDE_DIRS}
 )
 

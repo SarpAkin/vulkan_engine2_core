@@ -24,11 +24,13 @@ struct SubpassDetails final : public ISubpass {
     u32 subpass_index;
 
 public:
-    virtual u32 get_subpass_index() const override { return subpass_index; }
-    virtual VkRenderPass get_renderpass() const override;
-    virtual u32 get_attachment_count() const override { return color_attachments.size(); };
+    u32 get_subpass_index() const override { return subpass_index; }
+    VkRenderPass get_renderpass_handle() const override;
+    u32 get_attachment_count() const override { return color_attachments.size(); };
+    vke::Renderpass* get_vke_renderpass() const override { return renderpass; }
+    std::unique_ptr<ISubpass> create_copy() const override { return std::make_unique<SubpassDetails>(*this); }
     ~SubpassDetails() {};
-    SubpassDetails()=default;
+    SubpassDetails() = default;
 };
 
 // an abstarct renderpass class
@@ -45,13 +47,13 @@ public: // getters
 
 public: // methods
     virtual void set_states(CommandBuffer& cmd);
+    virtual IImageView* get_attachment_view(u32 index) = 0;
 
     virtual void begin(CommandBuffer& cmd);
     virtual void next_subpass(CommandBuffer& cmd);
     virtual void end(CommandBuffer& cmd);
     virtual void set_external(bool is_external) { m_is_external = is_external; }
     virtual bool has_depth(u32 subpass) { return false; }
-
     Renderpass() {}
     ~Renderpass();
 
@@ -59,9 +61,9 @@ protected:
     virtual VkFramebuffer next_framebuffer() = 0;
 
 protected:
-    bool m_is_external;
+    bool m_is_external = false;
     u32 m_width, m_height;
-    VkRenderPass m_renderpass = nullptr; // should be destroyed by this class, created by child class.
+    VkRenderPass m_renderpass        = nullptr; // should be destroyed by this class, created by child class.
     IRenderTargetSize* m_target_size = nullptr;
     std::vector<VkClearValue> m_clear_values;
     std::vector<SubpassDetails> m_subpasses; // shouldn't be modified after creation. especially should't be resized since pointers to elements might be created.

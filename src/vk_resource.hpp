@@ -13,6 +13,10 @@ namespace vke {
 class DeviceGetter {
 protected:
     VkDevice device() const;
+    const vk::detail::DispatchLoaderDynamic& get_dispatch_table() const;
+    //shorthand for get_dispatch_table
+    const vk::detail::DispatchLoaderDynamic& dt() const { return get_dispatch_table(); }
+
     static VulkanContext* get_context();
 
 public:
@@ -27,6 +31,7 @@ class Resource : public DeviceGetter {
     enum class OwnerShip {
         OWNED,
         RefCounted,
+        // external behaves like owned but when get_reference is called it returns the external resource it points to
         EXTERNAL,
     };
 
@@ -43,7 +48,7 @@ public:
     Resource& operator=(Resource&&)      = delete;
 
     bool is_reference_counted() const { return m_ownership == OwnerShip::RefCounted; }
-    // Must be refence counted or else it will assert
+    // Must be reference counted or else it will assert
     RCResource<Resource> get_reference();
 
     void set_external(Resource* external) {
@@ -98,7 +103,7 @@ public:
     RCResource(const RCResource& other) {
         m_ptr = other.m_ptr;
         if (m_ptr) {
-            m_ptr->increment_ref_counter();
+            m_ptr->increment_reference_count();
         }
     }
 
@@ -111,7 +116,7 @@ public:
             // Copy the new resource
             m_ptr = other.m_ptr;
             if (m_ptr) {
-                m_ptr->increment_ref_counter();
+                m_ptr->increment_reference_count();
             }
         }
         return *this;
@@ -131,7 +136,7 @@ public:
     RCResource<T1> convert_to() {
         if (m_ptr == nullptr) return RCResource(nullptr);
 
-        m_ptr->increment_ref_counter();
+        m_ptr->increment_reference_count();
 
         return RCResource(m_ptr);
     }
@@ -141,7 +146,7 @@ public:
     operator bool() const { return !is_null(); }
 
 private:
-    // Unsafe consturctor that doesn't increment reference count
+    // Unsafe constructor that doesn't increment reference count
     RCResource(T* ptr) : m_ptr(ptr) {
     }
 
@@ -163,7 +168,7 @@ private:
 
         assert(res->is_reference_counted() == false);
 
-        res->m_ownership = Resource::OwnerShip::RefCounted;
+        if (res->m_ownership == Resource::OwnerShip::OWNED) res->m_ownership = Resource::OwnerShip::RefCounted;
         res->m_ref_count = 1;
 
         m_ptr = res_typed;

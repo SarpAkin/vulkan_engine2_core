@@ -59,6 +59,10 @@ std::string relative_path_impl(const char* source_path, const char* path) {
 }
 
 std::span<u8> read_file_binary(vke::ArenaAllocator* arena, const char* name) {
+    if(!fs::is_regular_file(name)) {
+        THROW_ERROR("failed to read file. %s is not a valid file",name);
+    }
+
     std::ifstream file(name, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("failed to open file");
@@ -72,6 +76,10 @@ std::span<u8> read_file_binary(vke::ArenaAllocator* arena, const char* name) {
 }
 
 std::string_view read_file(vke::ArenaAllocator* arena, const char* name) {
+    if(!fs::is_regular_file(name)) {
+        THROW_ERROR("failed to read file. %s is not a valid file",name);
+    }
+
     std::ifstream file(name, std::ios::ate);
     if (!file.is_open()) {
         throw std::runtime_error("failed to open file");

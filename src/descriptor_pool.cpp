@@ -4,9 +4,12 @@
 
 #include "util/util.hpp"
 
+#include <vulkan/vulkan.hpp>
+
 namespace vke {
 
 VkDescriptorSet DescriptorPool::allocate_set(VkDescriptorSetLayout layout) {
+    auto dt = get_dispatch_table();
 
     if (!m_current_pool) next_pool();
 
@@ -19,7 +22,7 @@ VkDescriptorSet DescriptorPool::allocate_set(VkDescriptorSetLayout layout) {
 
     VkDescriptorSet set;
 
-    auto result = vkAllocateDescriptorSets(device(), &info, &set);
+    auto result = dt.vkAllocateDescriptorSets(device(), &info, &set);
     if (result == VK_SUCCESS) {
         return set;
     } else if (result == VK_ERROR_FRAGMENTED_POOL || result == VK_ERROR_OUT_OF_POOL_MEMORY) {
@@ -32,6 +35,7 @@ VkDescriptorSet DescriptorPool::allocate_set(VkDescriptorSetLayout layout) {
 }
 
 void DescriptorPool::next_pool() {
+    auto dt = get_dispatch_table();
 
     if (m_current_pool) m_used_pools.push_back(m_current_pool);
 
@@ -55,17 +59,19 @@ void DescriptorPool::next_pool() {
             .pPoolSizes    = pool_sizes.data(),
         };
 
-        VK_CHECK(vkCreateDescriptorPool(device(), &info, nullptr, &m_current_pool));
+        VK_CHECK(dt.vkCreateDescriptorPool(device(), &info, nullptr, &m_current_pool));
     }
 }
 
 void DescriptorPool::reset() {
+    auto& dt = get_dispatch_table();
+
     if (m_current_pool) {
-        VK_CHECK(vkResetDescriptorPool(device(), m_current_pool, 0));
+        VK_CHECK(dt.vkResetDescriptorPool(device(), m_current_pool, 0));
     }
 
     for (auto pool : m_used_pools) {
-        VK_CHECK(vkResetDescriptorPool(device(), pool, 0));
+        VK_CHECK(dt.vkResetDescriptorPool(device(), pool, 0));
         m_free_pools.push_back(pool);
     }
 
@@ -73,13 +79,15 @@ void DescriptorPool::reset() {
 }
 
 DescriptorPool::~DescriptorPool() {
-    if (m_current_pool) vkDestroyDescriptorPool(device(), m_current_pool, nullptr);
+    auto& dt = get_dispatch_table();
+
+    if (m_current_pool) dt.vkDestroyDescriptorPool(device(), m_current_pool, nullptr);
 
     for (auto pool : m_free_pools)
-        vkDestroyDescriptorPool(device(), pool, nullptr);
+        dt.vkDestroyDescriptorPool(device(), pool, nullptr);
 
     for (auto pool : m_used_pools)
-        vkDestroyDescriptorPool(device(), pool, nullptr);
+        dt.vkDestroyDescriptorPool(device(), pool, nullptr);
 }
 
 } // namespace vke

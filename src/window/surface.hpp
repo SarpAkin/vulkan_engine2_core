@@ -47,10 +47,7 @@ public: // getters
     bool prepare(u64 time_out = UINT64_MAX);
     bool present();
 
-    void recrate_swapchain() {
-        printf("recrating swapchin!\n");
-        init_swapchain();
-    }
+    void recrate_swapchain();
 
     u32 get_swapchain_image_index() const { return m_swapchain_image_index; }
 
@@ -70,6 +67,7 @@ private:
 
     u32 m_swapchain_image_index = 0;
     u32 m_frame_index           = 0;
+    u32 m_width = 0,m_height = 0;
 
     // prepare semaphore is signalled after surface preparetion, wait semapore is used to wait for present
     std::vector<std::unique_ptr<Semaphore>> m_prepare_semaphores, m_wait_semaphores;

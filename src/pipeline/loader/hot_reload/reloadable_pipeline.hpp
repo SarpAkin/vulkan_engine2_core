@@ -29,6 +29,7 @@ public:
     VkPipelineLayout layout() override { return m_current_pipeline->layout(); }
     VkShaderStageFlagBits push_stages() override { return m_current_pipeline->push_stages(); }
     VkDescriptorSetLayout set_layout(u32 index) override { return m_current_pipeline->set_layout(index); }
+    std::string_view subpass_name() override { return m_current_pipeline->subpass_name(); }
 
     void bind(vke::CommandBuffer& cmd) override;
     void reload();

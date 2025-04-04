@@ -76,5 +76,7 @@ Renderpass::~Renderpass() {
 //     renderpass->begin(*this);
 // }
 
-VkRenderPass SubpassDetails::get_renderpass() const { return renderpass->handle(); }
+VkRenderPass SubpassDetails::get_renderpass_handle() const { 
+    return renderpass->handle(); 
+}
 } // namespace vke

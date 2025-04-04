@@ -55,6 +55,8 @@ public:
         binding.inputRate                       = VK_VERTEX_INPUT_RATE_VERTEX;
 
         bindings.push_back(binding);
+
+        m_offset_counter = 0;
     }
 
     template <typename T>

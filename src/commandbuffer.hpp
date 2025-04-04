@@ -28,7 +28,8 @@ public:
     friend Fence;
 
     CommandBuffer(bool is_primary = true, int queue_family_index = -1);
-    CommandBuffer(VkCommandBuffer cmd,bool is_renderpass = false, bool is_primary = false);
+    CommandBuffer(VkCommandBuffer cmd, bool is_renderpass = false, bool is_primary = false);
+    CommandBuffer(CommandPool* pool, VkCommandBuffer rcmd,bool is_primary);
 
     ~CommandBuffer();
 
@@ -43,15 +44,15 @@ public:
 
     std::span<VkSemaphore> get_wait_semaphores();
 
-    void begin_secondry();
-    // void begin_secondry(Renderpass* renderpass, u32 subpass);
+    void begin_secondary();
+    void begin_secondary(const ISubpass* subpass);
 
     void cmd_begin_renderpass(const VkRenderPassBeginInfo* pRenderPassBegin, VkSubpassContents contents);
     void cmd_next_subpass(VkSubpassContents contents);
     void cmd_end_renderpass();
 
-    void execute_secondries(const CommandBuffer* cmd);
-    void execute_secondries(std::span<const CommandBuffer*> cmd);
+    void execute_secondaries(const CommandBuffer* cmd);
+    void execute_secondaries(std::span<const CommandBuffer*> cmd);
 
     // VkCmd* wrappers
     // void begin_renderpass(Renderpass* renderpass, VkSubpassContents contents);
@@ -62,6 +63,7 @@ public:
     void bind_index_buffer(const IBufferSpan* buffer, VkIndexType index_type = VK_INDEX_TYPE_UINT16);
     void bind_index_buffer(const IBufferSpan& buffer, VkIndexType index_type = VK_INDEX_TYPE_UINT16) { bind_index_buffer(&buffer, index_type); }
 
+    void bind_vertex_buffer(const std::span<const IBufferSpan*>& buffer);
     void bind_vertex_buffer(const std::initializer_list<const IBufferSpan*>& buffer);
     void bind_descriptor_set(u32 index, VkDescriptorSet set);
     void push_constant(u32 size, const void* pValues);
@@ -90,23 +92,32 @@ public:
     void draw_mesh_tasks_indirect(const IBufferSpan* indirect_draw_buffer, u32 draw_count, u32 stride);
     void draw_mesh_tasks_indirect_count(const IBufferSpan* indirect_draw_buffer, const IBufferSpan* draw_count_buffer, u32 max_draw_count, u32 stride);
 
-    void copy_buffer(const vke::IBuffer* src_buffer, const vke::IBuffer* dst_bfufer, std::span<VkBufferCopy> regions);
+    void copy_buffer(const vke::IBuffer* src_buffer, const vke::IBuffer* dst_buffer, std::span<VkBufferCopy> regions);
     void copy_buffer(const vke::IBufferSpan& src_span, const vke::IBufferSpan& dst_span);
 
     void dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z);
 
+    void fill_buffer(vke::IBufferSpan& buffer_span, u32 data);
+
     void pipeline_barrier(const PipelineBarrierArgs& args);
 
 private:
-    VkCommandBuffer m_cmd;
-    VkCommandPool m_cmd_pool;
+    void flush_postponed_descriptor_sets();
+
+private:
+    VkCommandBuffer m_cmd = nullptr;
+    VkCommandPool m_cmd_pool = nullptr;
+    vke::CommandPool* m_vke_cmd_pool = nullptr;
     bool m_is_external = false;
+    bool m_is_primary;
+    const vk::detail::DispatchLoaderDynamic* m_dt;
 
     std::vector<RCResource<Resource>> m_dependent_resources;
     std::vector<VkSemaphore> m_wait_semaphores;
+    std::vector<std::pair<u32, VkDescriptorSet>> m_postponed_set_binds;
 
     VkPipelineBindPoint m_current_pipeline_state = VK_PIPELINE_BIND_POINT_COMPUTE;
-    IPipeline* m_current_pipeline                 = nullptr;
+    IPipeline* m_current_pipeline                = nullptr;
 };
 
 } // namespace vke

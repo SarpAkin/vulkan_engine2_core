@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deque>
+#include <unordered_map>
 #ifndef _WIN32
 #include <alloca.h>
 #else
@@ -22,6 +24,8 @@
 
 #include "arena_alloc.hpp"
 
+#include "slim_vec.hpp"
+
 #include <cstdio>
 #include <stdexcept> // IWYU pragma: export
 
@@ -36,11 +40,30 @@ namespace fs = std::filesystem;
 
 class ArenaAllocator;
 
+constexpr u32 calculate_dispatch_size(u32 x, u32 subgroup_size) {
+    return (x + (subgroup_size - 1)) / subgroup_size;
+}
+
 void name_thread(std::thread& thread, const char* name);
 
 auto map_vec(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin()))> results;
-    results.reserve(vector.size());
+    if constexpr (requires { vector.size(); }) {
+        results.reserve(vector.size());
+    }
+    for (const auto& element : vector) {
+        results.push_back(f(element));
+    }
+
+    return results;
+}
+
+template <size_t small_vec_size = 8>
+auto map_vec2small_vec(auto&& vector, auto&& f) {
+    vke::SmallVec<decltype(f(*vector.begin())), small_vec_size> results;
+    if constexpr (requires { vector.size(); }) {
+        results.reserve(vector.size());
+    }
     for (const auto& element : vector) {
         results.push_back(f(element));
     }
@@ -50,7 +73,9 @@ auto map_vec(auto&& vector, auto&& f) {
 
 auto map_vec_indicies(auto&& vector, auto&& f) {
     std::vector<decltype(f(*vector.begin(), 0))> results;
-    results.reserve(vector.size());
+    if constexpr (requires { vector.size(); }) {
+        results.reserve(vector.size());
+    }
     int i = 0;
     for (const auto& element : vector) {
         results.push_back(f(element, i));
@@ -81,6 +106,31 @@ auto map_optional(const std::optional<T>& opt, auto&& func) -> std::optional<dec
     return std::nullopt;
 }
 
+// https://stackoverflow.com/questions/2067988/how-to-make-a-recursive-lambda
+template <class F>
+struct YCombinator {
+    F f; // the lambda will be stored here
+
+    // a forwarding operator():
+    template <class... Args>
+    decltype(auto) operator()(Args&&... args) const {
+        // we pass ourselves to f, then the arguments.
+        return f(*this, std::forward<Args>(args)...);
+    }
+
+    template <class... Args>
+    decltype(auto) operator()(Args&&... args) {
+        // we pass ourselves to f, then the arguments.
+        return f(*this, std::forward<Args>(args)...);
+    }
+};
+
+// helper function that deduces the type of the lambda:
+template <class F>
+YCombinator<std::decay_t<F>> make_y_combinator(F&& f) {
+    return {std::forward<F>(f)};
+}
+
 std::vector<u8> read_file_binary(const char* name);
 std::span<u8> read_file_binary(vke::ArenaAllocator* arena, const char* name);
 
@@ -88,6 +138,16 @@ std::string read_file(const char* name);
 std::string_view read_file(vke::ArenaAllocator* arena, const char* name);
 
 std::span<u32> cast_u8_to_span_u32(std::span<u8> span);
+
+template <class ToType, class FromType>
+std::span<ToType> span_cast(std::span<FromType> span) {
+    return std::span<ToType>(reinterpret_cast<ToType*>(span.data()), span.size_bytes() / sizeof(ToType));
+}
+
+template <class ToType, class FromType>
+std::span<const ToType> span_cast(std::span<const FromType> span) {
+    return std::span<const ToType>(reinterpret_cast<const ToType*>(span.data()), span.size_bytes() / sizeof(ToType));
+}
 
 std::string relative_path_impl(const char* source_path, const char* path);
 
@@ -98,8 +158,82 @@ T round_up_to_multiple(const T& value, const T& multiple) {
     return ((value + (multiple - 1)) / multiple) * multiple;
 }
 
-template <typename T, size_t N>
+template <class To, class From>
+To checked_integer_cast(From n) {
+    if constexpr (std::numeric_limits<From>::max() > std::numeric_limits<To>::max()) {
+        assert(n <= std::numeric_limits<To>::max());
+    }
+
+    if constexpr (std::numeric_limits<From>::min() < std::numeric_limits<To>::min()) {
+        assert(n >= std::numeric_limits<To>::min());
+    }
+
+    return static_cast<To>(n);
+}
+
+template <class T, size_t N>
+using CArray = T[N];
+
+template <class T, size_t N>
 constexpr size_t array_len(const T (&array)[N]) { return N; }
+
+template <class T, size_t N>
+void set_array(CArray<T, N>& array, auto&& function) {
+    for (int i = 0; i < N; i++) {
+        if constexpr (requires { function(i); }) {
+            array[i] = function(i);
+        } else {
+            array[i] = function();
+        }
+    }
+}
+
+template <class T>
+T fold(auto&& container, T initial, auto&& function) {
+    for (auto& e : container) {
+        initial = function(initial, e);
+    }
+    return initial;
+}
+
+template <class K, class T>
+std::optional<T> at(const std::unordered_map<K, T>& map, const K& key) {
+    auto it = map.find(key);
+    if (it != map.end()) {
+        return std::make_optional(it->second);
+    } else {
+        return std::nullopt;
+    }
+}
+
+template <class K, class T>
+const T* at_ptr(const std::unordered_map<K, T>& map, const K& key) {
+    auto it = map.find(key);
+    if (it != map.end()) {
+        return &it->second;
+    } else {
+        return nullptr;
+    }
+}
+
+template <class K, class T>
+T* at_ptr(std::unordered_map<K, T>& map, const K& key) {
+    auto it = map.find(key);
+    if (it != map.end()) {
+        return &it->second;
+    } else {
+        return nullptr;
+    }
+}
+
+template <class T>
+std::optional<T> try_pop_front(std::deque<T>& deque) {
+    if (deque.empty()) return std::nullopt;
+
+    auto front = std::move(deque.front());
+    deque.pop_front();
+    return front;
+}
 
 } // namespace vke
 
@@ -141,7 +275,7 @@ constexpr size_t array_len(const T (&array)[N]) { return N; }
 //     return std::span(results, it);                                               \
 // }()
 
-#define MAP_VEC_ALLOCA(vector, ...) vke::map_vec(vector, __VA_ARGS__)
+#define MAP_VEC_ALLOCA(vector, ...) vke::map_vec2small_vec(vector, __VA_ARGS__)
 
 #ifdef _WIN32
 #define __PRETTY_FUNCTION__ __FUNCSIG__

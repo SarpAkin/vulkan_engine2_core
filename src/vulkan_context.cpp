@@ -4,14 +4,34 @@
 #include <stdexcept>
 #include <vector>
 #include <vk_mem_alloc.h>
+#include <vulkan/vulkan.hpp>
 
 #include <VkBootstrap.h>
 
 #include "builders/descriptor_set_layout_builder.hpp"
+#include "commandbuffer.hpp"
 #include "fence.hpp"
 #include "util/util.hpp"
+#include "vkutil.hpp"
 
 namespace vke {
+
+struct VulkanContext::Handles {
+    vk::Instance instance              = nullptr;
+    vk::Device device                  = nullptr;
+    vk::PhysicalDevice physical_device = nullptr;
+    vk::detail::DispatchLoaderDynamic dispatch_table;
+};
+
+void load_dispatch_table(VulkanContext::Handles& handles, bool device_specific) {
+    vk::detail::DynamicLoader dl;
+
+    if (device_specific) {
+        handles.dispatch_table.init(handles.instance, handles.device, dl);
+    } else {
+        handles.dispatch_table.init(dl);
+    }
+}
 
 VulkanContext* VulkanContext::s_context;
 
@@ -77,14 +97,16 @@ void validate_config(ContextConfig& config) {
     if (config.device_memory_addres) {
         config.features1_2.bufferDeviceAddress = true;
     }
-
 }
 
 void VulkanContext::init_context(const ContextConfig& _config) {
     ContextConfig config = _config;
     validate_config(config);
 
-    auto builder = vkb::InstanceBuilder();
+    m_handles = std::make_unique<Handles>();
+    load_dispatch_table(*m_handles, false);
+
+    auto builder = vkb::InstanceBuilder(m_handles->dispatch_table.vkGetInstanceProcAddr);
 
     builder.set_app_name(config.app_name);
     builder.require_api_version(config.vk_version_major, config.vk_version_minor, config.vk_version_patch);
@@ -115,6 +137,12 @@ void VulkanContext::init_context(const ContextConfig& _config) {
     vkb::DeviceBuilder vkb_device_builder(vkb_pdevice);
 
     m_device = vkb_device_builder.build()->device;
+
+    m_handles->instance        = m_instance;
+    m_handles->device          = m_device;
+    m_handles->physical_device = m_physical_device;
+
+    load_dispatch_table(*m_handles, true);
 }
 
 void VulkanContext::init_vma_allocator(const ContextConfig& config) {
@@ -184,4 +212,32 @@ VkFence VulkanContext::get_thread_local_fence() {
     return thread_local_fence->handle();
 }
 
+void VulkanContext::immediate_submit(std::function<void(vke::CommandBuffer& cmd)> function) {
+    vke::CommandBuffer cmd;
+
+    cmd.begin();
+    function(cmd);
+    cmd.end();
+
+    VkSubmitInfo info{
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+
+        .commandBufferCount = 1,
+        .pCommandBuffers    = &cmd.handle(),
+    };
+
+    CommandBuffer* cmds[] = {&cmd};
+
+    VkFence fence = get_thread_local_fence();
+
+    VK_CHECK(vkQueueSubmit(get_graphics_queue(), 1, &info, fence));
+
+    VK_CHECK(vkWaitForFences(get_device(), 1, &fence, VK_TRUE, 1E10));
+    VK_CHECK(vkResetFences(get_device(), 1, &fence));
+}
+
+vk::Device VulkanContext::get_cpp_device() const { return m_device; }
+vk::Instance VulkanContext::get_cpp_instance() const { return m_instance; }
+vk::PhysicalDevice VulkanContext::get_cpp_physical_device() const { return m_physical_device; }
+const vk::detail::DispatchLoaderDynamic& VulkanContext::get_dispatch_table() const { return m_handles->dispatch_table; }
 } // namespace vke

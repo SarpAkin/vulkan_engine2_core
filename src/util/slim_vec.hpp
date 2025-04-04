@@ -7,18 +7,23 @@
 #include <cstdlib>
 #include <new>
 #include <optional>
-#include <utility>
 #include <span>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace vke {
 
-template <class T, bool smallVec = false>
+template <class T, bool smallVec = false, size_t desired_stack_slots = 0>
 class SlimVec {
 public:
     using iterator       = T*;
     using const_iterator = const T*;
 
 public: // c'tors
+    SlimVec(size_t size, const T& val) { resize(size, val); }
+    SlimVec(size_t size) { resize(size, T()); }
+
     SlimVec() = default;
     SlimVec(const SlimVec& other) { _copy_from(other); }
     SlimVec(SlimVec&& other) { _move_from(std::move(other)); }
@@ -33,12 +38,67 @@ public: // c'tors
         return *this;
     }
 
+    template <class Container>
+    SlimVec(Container&& val) { assign(std::forward<Container>(val)); }
+
+    template <class Container>
+    SlimVec& operator=(Container&& val) {
+        assign(std::forward<Container>(val));
+        return *this;
+    }
+
+    SlimVec& operator=(const std::initializer_list<T>& iterable) {
+        assign(iterable);
+        return *this;
+    }
+
+    SlimVec(const std::initializer_list<T>& iterable) { assign(iterable); }
+
 public:
-    T* data(T* data) { return _data(); }
-    const T* data(T* data) const { return _data(); }
+    void assign(const SlimVec& other) { _copy_from(other); }
+    void assign(SlimVec&& other) { _move_from(std::move(other)); }
+
+    void assign(const std::vector<T>& std_vec) {
+        clear();
+        reserve(std_vec.size());
+        for (const auto& e : std_vec) {
+            push_back(e);
+        }
+    }
+
+    void assign(const std::initializer_list<T>& iterable) {
+        clear();
+        reserve(std::distance(iterable.begin(), iterable.end()));
+        for (const auto& e : iterable) {
+            push_back(e);
+        }
+    }
+
+    template <class Iterable>
+    void assign(Iterable&& iterable) {
+        clear();
+        reserve(std::distance(iterable.begin(), iterable.end()));
+        for (const auto& e : iterable) {
+            push_back(e);
+        }
+    }
+
+public:
+    T* data() { return _data(); }
+    const T* data() const { return _data(); }
 
     T& operator[](size_t index) { return _data()[index]; }
     const T& operator[](size_t index) const { return _data()[index]; }
+
+    T& at(size_t index) {
+        if (index >= size()) throw std::out_of_range("out of range at method vke::SlimVec::at(size_t)");
+        return _data()[index];
+    }
+
+    const T& at(size_t index) const {
+        if (index >= size()) throw std::out_of_range("out of range at method vke::SlimVec::at(size_t)");
+        return _data()[index];
+    }
 
     iterator begin() { return _data(); }
     iterator end() { return _data() + _size(); }
@@ -50,6 +110,8 @@ public:
     operator std::span<T>() { return {_data(), _size()}; }
     operator std::span<const T>() const { return {_data(), _size()}; }
 
+    std::span<T> as_span() { return {data(), size()}; }
+    std::span<const T> as_const_span() { return {data(), size()}; }
 
     void push_back(T&& item) {
         auto cur_size = _size();
@@ -66,6 +128,34 @@ public:
         _ensure_capacity_for_push_back();
 
         new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
+    void push_back_unchecked(T&& item) {
+        auto cur_size = _size();
+
+        assert(cur_size < _capacity());
+
+        new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
+    void push_back_unchecked(const T& item) {
+        auto cur_size = _size();
+
+        assert(cur_size < _capacity());
+
+        new (_data() + cur_size) T(std::move(item));
+        _set_size(cur_size + 1);
+    }
+
+    template <class... Args>
+    void emplace_back(Args&&... args) {
+        auto cur_size = _size();
+
+        _ensure_capacity_for_push_back();
+
+        new (_data() + cur_size) T(std::forward<Args>(args)...);
         _set_size(cur_size + 1);
     }
 
@@ -108,12 +198,17 @@ public:
         return item;
     }
 
+    template <class... Args>
+    void emplace(const_iterator pos, Args&&... args) {
+        insert(pos, T(std::forward<Args>(args)...));
+    }
+
     void insert(const_iterator pos, const T& value) {
-        insert(std::distance(begin(), pos), value);
+        insert_at(std::distance(begin(), pos), value);
     }
 
     void insert(const_iterator pos, T&& value) {
-        insert(std::distance(begin(), pos), value);
+        insert_at(std::distance(begin(), pos), value);
     }
 
     void insert_at(size_t index, T&& value) {
@@ -191,8 +286,16 @@ public:
         _set_size(0);
     }
 
+    void swap(SlimVec& other) { std::swap(*this, other); }
+
+    T& back() { return *(end() - 1); }
+    const T& back() const { return *(end() - 1); }
+    T& front() { return *begin(); }
+    const T& front() const { return *begin(); }
+
     bool empty() const { return _size() == 0; }
     void shrink_to_fit() { /*TODO*/ }
+    constexpr size_t max_size() const { return _small_vec_base_size - 1; }
 
 private:
     void _ensure_capacity_for_push_back() {
@@ -212,12 +315,6 @@ private:
     }
 
 private:
-    constexpr static size_t _small_vec_byte_space    = offsetof(SlimVec, m_size);
-    constexpr static size_t _small_vec_item_capacity = _small_vec_byte_space / sizeof(T);
-    constexpr static bool _small_vec                 = smallVec && _small_vec_item_capacity >= 1;
-    constexpr static uint32_t _small_vec_base_size   = UINT32_MAX - (_small_vec_item_capacity + 1);
-
-private:
     void _cleanup() {
         T* data = _data();
 
@@ -227,7 +324,7 @@ private:
             data[i].~T();
         }
 
-        if (!is_small_vec()) {
+        if (!is_small_vec() && _capacity() > 0) {
             free(data);
         }
 
@@ -336,7 +433,7 @@ private:
         }
     }
 
-    // Does not set m_size manualy
+    // Do not set m_size manually
     void _set_size(uint32_t size) {
         if (is_small_vec()) {
             assert(size <= _small_vec_item_capacity);
@@ -347,12 +444,29 @@ private:
         }
     }
 
+private:
+    static constexpr size_t calculate_data_array_size() {
+        if (smallVec == false) return 0;
+
+        size_t total_needed_space = (std::max(desired_stack_slots * sizeof(T), 12ul) - 12);
+
+        return (total_needed_space + 7) / 8;
+    }
+
+private:
+    constexpr static size_t _small_vec_byte_space    = offsetof(SlimVec, m_size);
+    constexpr static size_t _small_vec_item_capacity = _small_vec_byte_space / sizeof(T);
+    constexpr static bool _small_vec                 = smallVec && _small_vec_item_capacity >= 1;
+    constexpr static uint32_t _small_vec_base_size   = UINT32_MAX - (_small_vec_item_capacity + 1);
+
 private: // fields
-    T* m_data_ptr       = nullptr;
+    T* m_data_ptr = nullptr;
+    // on the small vec mode, from the start of m_data_ptr to begining of m_size is used for storage
+    size_t m_extra_dummy_storage[calculate_data_array_size()];
     uint32_t m_capacity = 0, m_size = _small_vec ? _small_vec_base_size : 0;
 };
 
 template <class T, size_t MinStackSlots = 0>
-using SmallVec = SlimVec<T, true>;
+using SmallVec = SlimVec<T, true, MinStackSlots>;
 
 } // namespace vke

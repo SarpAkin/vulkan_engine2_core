@@ -192,7 +192,7 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
     auto result = vkCreateGraphicsPipelines(device(), m_pipeline_cache, 1, &pipeline_info, nullptr, &pipeline);
 
     if (result != VK_SUCCESS) {
-        THROW_ERROR("failed to build pipeline %s",vke::vk_result_string(result).c_str());
+        THROW_ERROR("failed to build pipeline %s", vke::vk_result_string(result).c_str());
     }
 
     if (is_mesh_shader) {
@@ -203,6 +203,7 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
     vke_pipeline->m_data.dset_layouts = std::move(layouts.dset_layouts);
     vke_pipeline->m_data.push_stages  = layouts.push_stages;
     vke_pipeline->m_reflection        = std::move(m_reflection);
+    vke_pipeline->m_subpass_name      = std::move(m_subpass_name);
     return vke_pipeline;
 }
 
@@ -257,7 +258,7 @@ void PipelineBuilderBase::add_shader_stage(std::string_view spirv_path) {
 }
 
 void GPipelineBuilder::set_renderpass(ISubpass* subpass) {
-    set_renderpass(subpass->get_renderpass(), subpass->get_subpass_index(), subpass->get_attachment_count());
+    set_renderpass(subpass->get_renderpass_handle(), subpass->get_subpass_index(), subpass->get_attachment_count());
 }
 void GPipelineBuilder::set_renderpass(VkRenderPass renderpass, u32 subpass_index, u32 attachment_count) {
     m_renderpass       = renderpass;

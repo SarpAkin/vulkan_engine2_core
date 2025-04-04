@@ -2,7 +2,9 @@
 
 #include "renderpass.hpp"
 
-namespace vke{
+#include <vke/vke.hpp>
+
+namespace vke {
 
 class WindowRenderPass : public Renderpass {
 public:
@@ -10,11 +12,13 @@ public:
     ~WindowRenderPass();
 
     void begin(CommandBuffer& cmd) override;
-    void resize(CommandBuffer& cmd,u32 width, u32 height) override;
+    void resize(CommandBuffer& cmd, u32 width, u32 height) override;
 
     bool has_depth(u32 subpass) override { return true; }
+    IImageView* get_attachment_view(u32 index) override { return nullptr; }
 
 private:
+    void create_depth_buffer();
     void init_renderpass();
     void create_framebuffers();
     void destroy_framebuffers();
@@ -25,8 +29,8 @@ private:
 private:
     Window* m_window = nullptr;
     std::vector<RCResource<impl::Framebuffer>> m_framebuffers;
-    std::unique_ptr<vke::Image> m_depth;
+    vke::RCResource<vke::Image> m_depth;
     std::vector<VkImageView> m_swapchain_image_views;
 };
 
-}
+} // namespace vke

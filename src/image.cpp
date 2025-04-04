@@ -7,11 +7,10 @@
 
 #include "vulkan_context.hpp"
 
-
 #include "commandbuffer.hpp"
 
-#include "util/util.hpp"
 #include "buffer.hpp"
+#include "util/util.hpp"
 #include "vk_resource.hpp"
 #include "vkutil.hpp"
 
@@ -27,7 +26,7 @@ Image::Image(const ImageArgs& args) {
     m_num_mipmaps = args.mip_levels;
     m_aspects     = is_depth_format(args.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 
-    VkImageCreateInfo ic_info {
+    VkImageCreateInfo ic_info{
         .sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
         .flags         = args.create_flags,
         .imageType     = VK_IMAGE_TYPE_2D,
@@ -47,6 +46,7 @@ Image::Image(const ImageArgs& args) {
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
 
+    
 
     auto gpu_alloc = VulkanContext::get_context()->gpu_allocator();
 
@@ -77,9 +77,7 @@ Image::Image(const ImageArgs& args) {
     if (args.host_visible) {
         VK_CHECK(vmaMapMemory(gpu_alloc, m_allocation, &m_mapped_data));
     }
-
 }
-
 
 Image::~Image() {
 #ifndef NDEBUG
@@ -107,6 +105,16 @@ std::unique_ptr<Image> Image::buffer_to_image(CommandBuffer& cmd, IBufferSpan* b
             .buffer       = buffer,
             .final_layout = final_layout,
         });
+
+    return image;
+}
+
+std::unique_ptr<Image> Image::image_from_bytes(CommandBuffer& cmd, const std::span<const u8>& bytes, const ImageArgs& args, VkImageLayout final_layout) {
+    RCResource<Buffer> stencil = std::make_unique<Buffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bytes.size_bytes(), true);
+    memcpy(stencil->mapped_data_bytes().data(), bytes.data(), bytes.size_bytes());
+
+    auto image = Image::buffer_to_image(cmd, stencil.get(), args);
+    cmd.add_execution_dependency(stencil->get_reference());
 
     return image;
 }
@@ -199,6 +207,6 @@ std::unique_ptr<IImageView> Image::create_subview(const SubViewArgs& args) {
 }
 
 VkFormat IImageView::format() { return vke_image()->format(); }
-u32 IImageView::height() {return vke_image()->height(); }
-u32 IImageView::width() {return vke_image()->width(); }
+u32 IImageView::height() { return vke_image()->height(); }
+u32 IImageView::width() { return vke_image()->width(); }
 } // namespace vke

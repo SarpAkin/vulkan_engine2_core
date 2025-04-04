@@ -97,6 +97,7 @@ std::unique_ptr<IPipeline> DebugPipelineLoader::load_pipeline(PipelineDescriptio
         builder.set_depth_testing(description->depth_test);
         builder.set_topology(description->topology_mode);
         builder.set_rasterization(description->polygon_mode, description->cull_mode);
+        builder.set_subpass_name(description->renderpass);
 
         return builder.build();
     } else {

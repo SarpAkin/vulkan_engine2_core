@@ -9,6 +9,11 @@ VkDevice DeviceGetter::device() const {
     return VulkanContext::get_context()->get_device();
 }
 
+const vk::detail::DispatchLoaderDynamic& DeviceGetter::get_dispatch_table() const {
+    return VulkanContext::get_context()->get_dispatch_table();
+}
+
+
 VulkanContext* DeviceGetter::get_context() { return VulkanContext::get_context(); }
 
 Resource::Resource() {}
@@ -19,7 +24,7 @@ RCResource<Resource> Resource::get_reference() {
 
     assert(ref.get() != nullptr);
 
-    return RCResource(this);
+    return ref;
 }
 
 RCResource<Resource> Resource::try_get_reference() {

@@ -28,6 +28,9 @@ void Surface::init_swapchain() {
         destroy_swapchain();
     }
 
+    m_width = vkb_swapchain.extent.width;
+    m_height = vkb_swapchain.extent.height;
+
     m_swapchain_image_format = vkb_swapchain.image_format;
     m_swapchain              = vkb_swapchain.swapchain;
     m_swapchain_image_views  = vkb_swapchain.get_image_views().value();
@@ -124,17 +127,21 @@ bool Surface::present() {
     m_current_prepare_semaphore = nullptr;
     auto result                 = vkQueuePresentKHR(VulkanContext::get_context()->get_graphics_queue(), &presentInfo);
 
-    if (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR) return true;
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) return false;
+    if (result == VK_SUCCESS) return true;
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) return false;
 
     VK_CHECK(result);
     return false;
 }
 
 u32 Surface::height() const {
-    return m_window->height();
+    return m_height;
 }
 u32 Surface::width() const {
-    return m_window->width();
+    return m_width;
+}
+void Surface::recrate_swapchain() {
+    printf("recrating swapchin! window size: (%d,%d)\n", width(), height());
+    init_swapchain();
 }
 } // namespace vke

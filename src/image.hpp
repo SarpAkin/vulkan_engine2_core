@@ -36,13 +36,13 @@ struct CopyFromBufferArgs {
 
 struct SubViewArgs {
     u32 base_layer;
-    u32 layer_count = 1;
+    u32 layer_count    = 1;
     u32 base_miplevel  = 0;
     u32 miplevel_count = UINT_MAX; // by default same as images miplevel count
     VkImageViewType view_type;
 };
 
-class IImageView {
+class IImageView : public Resource {
 public:
     virtual VkImageView view() const = 0;
     virtual Image* vke_image()       = 0;
@@ -60,12 +60,12 @@ public:
     virtual u32 width();
     virtual u32 height();
 
-    virtual ~IImageView(){};
+    virtual ~IImageView() {};
 };
 
 class ImageView;
 
-class Image : public Resource, public IImageView {
+class Image : public IImageView {
     friend ImageView;
 
 public:
@@ -87,6 +87,11 @@ public: // getters
         return m_view_type;
     }
 
+    template <typename T>
+    T* mapped_data_ptr() {
+        return reinterpret_cast<T*>(m_mapped_data);
+    }
+
 public: // util
     std::unique_ptr<IImageView> create_subview(const SubViewArgs& arsg);
 
@@ -97,7 +102,8 @@ public: // util
     void save_as_png(const char* path);
 
 public: // static methods
-    static std::unique_ptr<Image> buffer_to_image(CommandBuffer& cmd, IBufferSpan* buffer, const ImageArgs& args,VkImageLayout final_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    static std::unique_ptr<Image> image_from_bytes(CommandBuffer& cmd, const std::span<const u8>& bytes, const ImageArgs& args, VkImageLayout final_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    static std::unique_ptr<Image> buffer_to_image(CommandBuffer& cmd, IBufferSpan* buffer, const ImageArgs& args, VkImageLayout final_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     static std::unique_ptr<Image> load_png(CommandBuffer& cmd, const char* path, u32 mip_levels = 1); // image_load.cpp
 
 private: // hide unnecessary methods from interface IImageView
