@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include <unordered_map>
 #ifndef _WIN32
 #include <alloca.h>
@@ -39,7 +40,7 @@ namespace fs = std::filesystem;
 
 class ArenaAllocator;
 
-constexpr u32 calculate_dispatch_size(u32 x,u32 subgroup_size){
+constexpr u32 calculate_dispatch_size(u32 x, u32 subgroup_size) {
     return (x + (subgroup_size - 1)) / subgroup_size;
 }
 
@@ -179,9 +180,9 @@ constexpr size_t array_len(const T (&array)[N]) { return N; }
 template <class T, size_t N>
 void set_array(CArray<T, N>& array, auto&& function) {
     for (int i = 0; i < N; i++) {
-        if constexpr (requires { function(i); }){
+        if constexpr (requires { function(i); }) {
             array[i] = function(i);
-        }else{
+        } else {
             array[i] = function();
         }
     }
@@ -223,6 +224,15 @@ T* at_ptr(std::unordered_map<K, T>& map, const K& key) {
     } else {
         return nullptr;
     }
+}
+
+template <class T>
+std::optional<T> try_pop_front(std::deque<T>& deque) {
+    if (deque.empty()) return std::nullopt;
+
+    auto front = std::move(deque.front());
+    deque.pop_front();
+    return front;
 }
 
 } // namespace vke

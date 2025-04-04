@@ -29,6 +29,7 @@ public:
 
     CommandBuffer(bool is_primary = true, int queue_family_index = -1);
     CommandBuffer(VkCommandBuffer cmd, bool is_renderpass = false, bool is_primary = false);
+    CommandBuffer(CommandPool* pool, VkCommandBuffer rcmd,bool is_primary);
 
     ~CommandBuffer();
 
@@ -104,9 +105,11 @@ private:
     void flush_postponed_descriptor_sets();
 
 private:
-    VkCommandBuffer m_cmd;
-    VkCommandPool m_cmd_pool;
+    VkCommandBuffer m_cmd = nullptr;
+    VkCommandPool m_cmd_pool = nullptr;
+    vke::CommandPool* m_vke_cmd_pool = nullptr;
     bool m_is_external = false;
+    bool m_is_primary;
     const vk::detail::DispatchLoaderDynamic* m_dt;
 
     std::vector<RCResource<Resource>> m_dependent_resources;

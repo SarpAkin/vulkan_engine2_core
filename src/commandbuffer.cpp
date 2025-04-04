@@ -14,6 +14,7 @@
 #include "vk_resource.hpp"
 #include "vkutil.hpp"
 #include "vulkan_context.hpp"
+#include "command_pool.hpp"
 
 namespace vke {
 
@@ -36,12 +37,27 @@ CommandBuffer::CommandBuffer(bool is_primary, int queue_index) {
     };
 
     VK_CHECK(m_dt->vkAllocateCommandBuffers(device(), &alloc_info, &m_cmd));
+
+    m_is_primary = is_primary;
+}
+
+CommandBuffer::CommandBuffer(CommandPool* pool, VkCommandBuffer cmd,bool is_primary) {
+    m_dt = &get_dispatch_table();
+
+    m_vke_cmd_pool = pool;
+    m_cmd = cmd;
+    m_is_primary = is_primary;
 }
 
 CommandBuffer::~CommandBuffer() {
     if (m_is_external) return;
 
-    m_dt->vkDestroyCommandPool(device(), m_cmd_pool, nullptr);
+    if(m_vke_cmd_pool){
+        m_dt->vkResetCommandBuffer(m_cmd,0);
+        m_vke_cmd_pool->push_recycled_cmd(m_cmd, m_is_primary);
+    }else{
+        m_dt->vkDestroyCommandPool(device(), m_cmd_pool, nullptr);
+    }
 }
 
 void CommandBuffer::begin() {
