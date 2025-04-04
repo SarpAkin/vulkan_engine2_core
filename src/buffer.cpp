@@ -6,6 +6,8 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan_core.h>
 
+#include <vulkan/vulkan.hpp>
+
 namespace vke {
 
 Buffer::Buffer(VkBufferUsageFlags usage, usize buffer_size, bool host_visible) {
@@ -46,11 +48,13 @@ BufferSpan IBufferSpan::subspan(usize _byte_offset, usize _byte_size) {
 }
 
 VkDeviceSize IBufferSpan::device_address() const {
+    auto& dt = vke::VulkanContext::get_context()->get_dispatch_table();
+    
     VkBufferDeviceAddressInfo info = {
         .sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
         .buffer = handle(),
     };
 
-    return vkGetBufferDeviceAddress(vke::VulkanContext::get_context()->get_device(), &info) + byte_offset();
+    return dt.vkGetBufferDeviceAddress(vke::VulkanContext::get_context()->get_device(), &info) + byte_offset();
 } // namespace vke
 } // namespace vke
