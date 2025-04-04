@@ -42,7 +42,7 @@ struct SubViewArgs {
     VkImageViewType view_type;
 };
 
-class IImageView {
+class IImageView : public Resource {
 public:
     virtual VkImageView view() const = 0;
     virtual Image* vke_image()       = 0;
@@ -65,7 +65,7 @@ public:
 
 class ImageView;
 
-class Image : public Resource, public IImageView {
+class Image : public IImageView {
     friend ImageView;
 
 public:

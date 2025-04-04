@@ -5,7 +5,7 @@
 
 namespace vke {
 
-class ImageView : public Resource, public IImageView {
+class ImageView : public IImageView {
 public:
     ImageView(Image* image, const VkImageViewCreateInfo& c_info);
     ~ImageView();
