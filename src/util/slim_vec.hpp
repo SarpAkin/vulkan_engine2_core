@@ -111,7 +111,7 @@ public:
     operator std::span<const T>() const { return {_data(), _size()}; }
 
     std::span<T> as_span() { return {data(), size()}; }
-    std::span<const T> as_const_span() { return {data(), size()}; }
+    std::span<const T> as_const_span() const { return {data(), size()}; }
 
     void push_back(T&& item) {
         auto cur_size = _size();
