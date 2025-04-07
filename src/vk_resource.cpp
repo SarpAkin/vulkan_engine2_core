@@ -13,7 +13,6 @@ const vk::detail::DispatchLoaderDynamic& DeviceGetter::get_dispatch_table() cons
     return VulkanContext::get_context()->get_dispatch_table();
 }
 
-
 VulkanContext* DeviceGetter::get_context() { return VulkanContext::get_context(); }
 
 Resource::Resource() {}
@@ -33,7 +32,7 @@ RCResource<Resource> Resource::try_get_reference() {
         return RCResource<Resource>();
     case OwnerShip::RefCounted:
         increment_reference_count();
-        return RCResource(this);
+        return RCResource<Resource>::create_from_raw_pointer(this);
     case OwnerShip::EXTERNAL:
         return m_external->try_get_reference();
     }

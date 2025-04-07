@@ -14,7 +14,7 @@ class DeviceGetter {
 protected:
     VkDevice device() const;
     const vk::detail::DispatchLoaderDynamic& get_dispatch_table() const;
-    //shorthand for get_dispatch_table
+    // shorthand for get_dispatch_table
     const vk::detail::DispatchLoaderDynamic& dt() const { return get_dispatch_table(); }
 
     static VulkanContext* get_context();
@@ -87,6 +87,21 @@ public:
         m_ptr = nullptr;
     }
 
+    RCResource(T* ptr) {
+        if (ptr == nullptr) {
+            m_ptr = nullptr;
+            return;
+        }
+
+        Resource* res = ptr;
+        if (res->m_ownership != Resource::OwnerShip::RefCounted) {
+            throw std::runtime_error("can't construct RCResource from Raw pointer as the pointed resource isn't ref counted");
+        }
+
+        res->increment_reference_count();
+        m_ptr = ptr;
+    }
+
     RCResource(std::unique_ptr<T>&& _res) {
         reset(std::move(_res));
     }
@@ -145,9 +160,14 @@ public:
 
     operator bool() const { return !is_null(); }
 
+    bool operator==(const RCResource& other) const { return m_ptr == other.m_ptr; }
+    bool operator==(const T* ptr) const { return m_ptr == ptr; }
+
 private:
-    // Unsafe constructor that doesn't increment reference count
-    RCResource(T* ptr) : m_ptr(ptr) {
+    static RCResource create_from_raw_pointer(T* ptr) {
+        RCResource res;
+        res.m_ptr = ptr;
+        return res;
     }
 
 private:
