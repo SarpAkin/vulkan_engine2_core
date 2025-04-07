@@ -48,13 +48,13 @@ void MultiPassRenderPass::create_attachments() {
         }
 
         return Attachment{
-            .image = std::make_unique<vke::Image>(ImageArgs{
+            .image = static_cast<std::unique_ptr<vke::IImageView>>(std::make_unique<vke::Image>(ImageArgs{
                 .format      = info.description.format,
                 .usage_flags = flags,
                 .width       = width(),
                 .height      = height(),
                 .layers      = 1,
-            }),
+            })),
         };
     });
 }

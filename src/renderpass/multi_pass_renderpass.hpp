@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "../image.hpp"
+
 #include "../fwd.hpp"
 #include "renderpass.hpp"
 
@@ -34,7 +36,7 @@ private:
 
 private:
     struct Attachment {
-        std::unique_ptr<Image> image;
+        vke::RCResource<vke::IImageView> image;
     };
 
     Window* m_window               = nullptr;
