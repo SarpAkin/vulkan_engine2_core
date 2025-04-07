@@ -235,6 +235,15 @@ std::optional<T> try_pop_front(std::deque<T>& deque) {
     return front;
 }
 
+template<class T>
+std::vector<T> merge_into_vector(auto&& a,auto&& b){
+    std::vector<T> out;
+    out.reserve(a.size() + b.size());
+    out.insert(out.end(),a.begin(),a.end());
+    out.insert(out.end(),b.begin(),b.end());
+    return out;
+}
+
 } // namespace vke
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
