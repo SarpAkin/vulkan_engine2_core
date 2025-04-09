@@ -30,10 +30,11 @@ public:
     VkPolygonMode polygon_mode        = VK_POLYGON_MODE_FILL;
     VkPrimitiveTopology topology_mode = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     VkCullModeFlagBits cull_mode      = VK_CULL_MODE_NONE;
+    VkCompareOp depth_op              = VK_COMPARE_OP_LESS;
     bool depth_test                   = true;
     bool depth_write                  = true;
 
-    //not serialized
+    // not serialized
     std::string file_path;
 
     void load(const json& json) {
@@ -58,6 +59,7 @@ public:
         cull_mode     = parse_cull_mode(json.value("cull_mode", "NONE"));
         depth_test    = json.value("depth_test", true);
         depth_write   = json.value("depth_write", true);
+        depth_op      = parse_depth_op(json.value("depth_op", "LESS_OR_EQUAL"));
     }
 };
 
@@ -66,7 +68,7 @@ public:
     std::vector<PipelineDescription> pipelines;
 
     void load(const json& json) {
-        for(const auto& pipeline : json.value("pipelines",json::array())){
+        for (const auto& pipeline : json.value("pipelines", json::array())) {
             PipelineDescription description;
             description.load(pipeline);
             pipelines.push_back(std::move(description));

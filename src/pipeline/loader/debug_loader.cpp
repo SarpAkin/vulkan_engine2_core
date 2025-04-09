@@ -53,7 +53,7 @@ void DebugPipelineLoader::load_pipeline_file(const char* filename) {
     pipeline_file.load(json::parse(is));
 
     for (auto& pipeline : pipeline_file.pipelines) {
-        auto name = pipeline.name; // pipeline is moved out so name becomes empty after the move
+        auto name          = pipeline.name; // pipeline is moved out so name becomes empty after the move
         pipeline.file_path = filename;
 
         m_pipelines_descriptions[name] = std::make_unique<PipelineDescription>(std::move(pipeline));
@@ -94,7 +94,7 @@ std::unique_ptr<IPipeline> DebugPipelineLoader::load_pipeline(PipelineDescriptio
 
         m_globals_provider->set_globals(builder, description);
 
-        builder.set_depth_testing(description->depth_test);
+        builder.set_depth_testing(description->depth_test, description->depth_write, description->depth_op);
         builder.set_topology(description->topology_mode);
         builder.set_rasterization(description->polygon_mode, description->cull_mode);
         builder.set_subpass_name(description->renderpass);
