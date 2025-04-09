@@ -15,13 +15,11 @@
 
 #include "../util/util.hpp"
 
-
 namespace vke {
 
 void PipelineBuilderBase::set_descriptor_set_layout(int set_index, VkDescriptorSetLayout layout) {
     m_reflection->set_descriptor_layout(set_index, layout);
 }
-
 
 PipelineBuilderBase::~PipelineBuilderBase() {
     for (auto& shader : m_shader_details) {
@@ -77,12 +75,12 @@ void GPipelineBuilder::set_rasterization(VkPolygonMode polygon_mode, VkCullModeF
     };
 }
 
-void GPipelineBuilder::set_depth_testing(bool depth_testing) {
+void GPipelineBuilder::set_depth_testing(bool depth_testing, bool depth_write, VkCompareOp compare) {
     m_depth_stencil = {
         .sType            = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
         .depthTestEnable  = depth_testing,
-        .depthWriteEnable = depth_testing,
-        .depthCompareOp   = depth_testing ? VK_COMPARE_OP_LESS_OR_EQUAL : VK_COMPARE_OP_ALWAYS,
+        .depthWriteEnable = depth_write,
+        .depthCompareOp   = depth_testing ? compare : VK_COMPARE_OP_ALWAYS,
     };
 
     default_depth = false;
@@ -241,8 +239,6 @@ void PipelineBuilderBase::add_shader_stage(std::string_view spirv_path) {
 
     if (p.extension() != ".spv") {
         fprintf(stderr, "failed to load shader. path: %s\n", p.c_str());
-
-
 
         // ShaderCompileOptions options{
         //     .defines = m_defines,

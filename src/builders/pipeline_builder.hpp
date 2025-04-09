@@ -76,9 +76,9 @@ public:
     void set_renderpass(VkRenderPass renderpass, u32 subpass_index, u32 attachment_count);
     void set_subpass_name(const std::string& name) { m_subpass_name = name; }
 
-    void set_topology(VkPrimitiveTopology topology);                                  // Set to triangle list by default
-    void set_rasterization(VkPolygonMode polygon_mode, VkCullModeFlagBits cull_mode); // Set to Triangle Fill & No Cull
-    void set_depth_testing(bool depth_testing);                                       // Defautls to true if renderpass has depth buffer else false
+    void set_topology(VkPrimitiveTopology topology);                                                                           // Set to triangle list by default
+    void set_rasterization(VkPolygonMode polygon_mode, VkCullModeFlagBits cull_mode);                                          // Set to Triangle Fill & No Cull
+    void set_depth_testing(bool depth_testing, bool depth_write = true, VkCompareOp compare_op = VK_COMPARE_OP_LESS_OR_EQUAL); // Defaults to true if renderpass has depth buffer else false
     inline void set_vertex_input(const VertexInputDescriptionBuilder* builder) { m_input_description_builder = builder; };
 
     std::unique_ptr<Pipeline> build();
