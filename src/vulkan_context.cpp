@@ -197,9 +197,22 @@ void VulkanContext::cleanup_conext() { delete s_context; }
 void VulkanContext::query_device_info() {
     m_device_info = std::make_unique<DeviceInfo>();
 
-    vkGetPhysicalDeviceProperties(m_physical_device, &m_device_info->properties);
-    vkGetPhysicalDeviceFeatures(m_physical_device, &m_device_info->features);
-    vkGetPhysicalDeviceMemoryProperties(m_physical_device, &m_device_info->memory_properties);
+    dt().vkGetPhysicalDeviceProperties(m_physical_device, &m_device_info->properties);
+    dt().vkGetPhysicalDeviceMemoryProperties(m_physical_device, &m_device_info->memory_properties);
+
+    VkPhysicalDeviceFeatures2 features2{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+        .pNext = &m_device_info->features1_1,
+    };
+
+    m_device_info->features1_1.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    m_device_info->features1_1.pNext = &m_device_info->features1_2;
+    m_device_info->features1_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    m_device_info->features1_2.pNext = &m_device_info->features1_3;
+    m_device_info->features1_3.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+
+    dt().vkGetPhysicalDeviceFeatures2(m_physical_device, &features2);
+    m_device_info->features = features2.features;
 }
 
 thread_local std::unique_ptr<vke::Fence> thread_local_fence = nullptr;

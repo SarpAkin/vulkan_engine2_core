@@ -87,6 +87,7 @@ private:
     void set_opaque_color_blend();
 
     const VertexInputDescriptionBuilder* m_input_description_builder = nullptr;
+    ISubpass* m_isubpass                                             = nullptr;
     VkRenderPass m_renderpass                                        = VK_NULL_HANDLE;
     u32 m_subpass_index                                              = 0;
     u32 m_attachment_count                                           = 0;

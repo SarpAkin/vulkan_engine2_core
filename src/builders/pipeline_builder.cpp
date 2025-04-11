@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <memory>
+#include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_core.h>
 
 #include <spirv_reflect.h>
@@ -14,6 +15,7 @@
 #include "vertex_input_builder.hpp"
 
 #include "../util/util.hpp"
+#include "../vulkan_context.hpp"
 
 namespace vke {
 
@@ -164,6 +166,10 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
         vertex_input_info = m_input_description_builder->get_info();
     }
 
+    VkPipelineRenderingCreateInfo rendering_create_info{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+    };
+
     VkGraphicsPipelineCreateInfo pipeline_info = {
         .sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .stageCount          = static_cast<uint32_t>(shader_stages.size()),
@@ -182,12 +188,29 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
         .basePipelineHandle  = VK_NULL_HANDLE,
     };
 
+    // declare in the outer scope to extend its lifetime to the end of function
+    PipelineRenderTargetDescription subpass_data;
+    if (m_isubpass ? !m_isubpass->is_renderpass() : false) {
+        assert(get_context()->get_device_info()->features1_3.dynamicRendering); 
+
+        subpass_data = m_isubpass->get_attachment_info();
+
+        rendering_create_info.colorAttachmentCount    = subpass_data.color_attachments.size();
+        rendering_create_info.pColorAttachmentFormats = subpass_data.color_attachments.data();
+        rendering_create_info.depthAttachmentFormat   = subpass_data.depth_attachment.value_or(VK_FORMAT_UNDEFINED);
+        rendering_create_info.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+
+        pipeline_info.pNext      = &rendering_create_info;
+        pipeline_info.renderPass = VK_NULL_HANDLE;
+        pipeline_info.subpass    = 0;
+    }
+
     if (is_mesh_shader) {
         // printf("mesh shader compiled!!!\n");
     }
 
     VkPipeline pipeline;
-    auto result = vkCreateGraphicsPipelines(device(), m_pipeline_cache, 1, &pipeline_info, nullptr, &pipeline);
+    auto result = dt().vkCreateGraphicsPipelines(device(), m_pipeline_cache, 1, &pipeline_info, nullptr, &pipeline);
 
     if (result != VK_SUCCESS) {
         THROW_ERROR("failed to build pipeline %s", vke::vk_result_string(result).c_str());
@@ -254,6 +277,7 @@ void PipelineBuilderBase::add_shader_stage(std::string_view spirv_path) {
 }
 
 void GPipelineBuilder::set_renderpass(ISubpass* subpass) {
+    m_isubpass = subpass;
     set_renderpass(subpass->get_renderpass_handle(), subpass->get_subpass_index(), subpass->get_attachment_count());
 }
 void GPipelineBuilder::set_renderpass(VkRenderPass renderpass, u32 subpass_index, u32 attachment_count) {

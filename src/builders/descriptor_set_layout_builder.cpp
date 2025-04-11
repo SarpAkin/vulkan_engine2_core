@@ -34,14 +34,14 @@ VkDescriptorSetLayout DescriptorSetLayoutBuilder::build() {
     VK_CHECK(vkCreateDescriptorSetLayout(VulkanContext::get_context()->get_device(), &info, nullptr, &layout));
 
     //TODO replace with hash & cache
-    std::lock_guard<std::mutex> quard(destroy_queue_lock);
+    std::lock_guard<std::mutex> guard(destroy_queue_lock);
     destroy_queue.push_back(layout);
 
     return layout;
 }
 
 void DescriptorSetLayoutBuilder::cleanup_layouts() {
-    std::lock_guard<std::mutex> quard(destroy_queue_lock);
+    std::lock_guard<std::mutex> guard(destroy_queue_lock);
 
     for (auto& layout : destroy_queue) {
         vkDestroyDescriptorSetLayout(VulkanContext::get_context()->get_device(), layout, nullptr);

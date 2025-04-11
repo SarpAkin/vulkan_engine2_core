@@ -15,7 +15,11 @@ namespace vke {
 struct DeviceInfo {
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceMemoryProperties memory_properties;
-    VkPhysicalDeviceFeatures features;
+
+    VkPhysicalDeviceFeatures features            = {};
+    VkPhysicalDeviceVulkan11Features features1_1 = {};
+    VkPhysicalDeviceVulkan12Features features1_2 = {};
+    VkPhysicalDeviceVulkan13Features features1_3 = {};
 };
 
 struct ContextConfig;
@@ -61,6 +65,8 @@ private:
     void init_queues();
     void query_device_info();
 
+    const vk::detail::DispatchLoaderDynamic& dt() const { return get_dispatch_table(); }
+
     VulkanContext(VkInstance instance, VkPhysicalDevice pdevice, VkDevice device);
     VulkanContext(const ContextConfig& config);
 
@@ -92,10 +98,11 @@ struct ContextConfig {
     bool window               = true;
     bool device_memory_addres = false;
     // Window* window       = nullptr;
-    VkPhysicalDeviceFeatures features1_0         = {};
-    VkPhysicalDeviceVulkan11Features features1_1 = {};
-    VkPhysicalDeviceVulkan12Features features1_2 = {};
-    VkPhysicalDeviceVulkan13Features features1_3 = {};
+    VkPhysicalDeviceFeatures features1_0                       = {};
+    VkPhysicalDeviceVulkan11Features features1_1               = {};
+    VkPhysicalDeviceVulkan12Features features1_2               = {};
+    VkPhysicalDeviceVulkan13Features features1_3               = {};
+    VkPhysicalDeviceMeshShaderFeaturesEXT features_mesh_shader = {};
 };
 
 } // namespace vke
