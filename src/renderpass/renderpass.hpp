@@ -18,22 +18,25 @@ namespace vke {
 class Renderpass;
 
 struct SubpassDetails final : public ISubpass {
-    std::vector<VkFormat> color_attachments;
-    std::optional<VkFormat> depth_format;
     Renderpass* renderpass;
     u32 subpass_index;
+
+    PipelineRenderTargetDescription render_target_description;
 
 public:
     u32 get_subpass_index() const override { return subpass_index; }
     VkRenderPass get_renderpass_handle() const override;
-    u32 get_attachment_count() const override { return color_attachments.size(); };
+    u32 get_attachment_count() const override { return render_target_description.color_attachments.size(); };
     vke::Renderpass* get_vke_renderpass() const override { return renderpass; }
     std::unique_ptr<ISubpass> create_copy() const override { return std::make_unique<SubpassDetails>(*this); }
+
+    PipelineRenderTargetDescription get_attachment_info() const override { return render_target_description; };
+
     ~SubpassDetails() {};
     SubpassDetails() = default;
 };
 
-// an abstarct renderpass class
+// an abstract renderpass class
 class Renderpass : public Resource, public IRenderTargetSize {
 public: // getters
     u32 width() const override { return m_width; }

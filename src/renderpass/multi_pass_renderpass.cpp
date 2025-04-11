@@ -22,12 +22,12 @@ MultiPassRenderPass::MultiPassRenderPass(RenderPassBuilder* builder, u32 width, 
 
     m_subpasses = vke::map_vec(builder->m_subpass_info, [&](const impl::SubpassInfo& info) {
         SubpassDetails d;
-        d.renderpass        = this;
-        d.depth_format      = m_attachment_infos[info.depth_attachment->attachment].description.format;
-        d.color_attachments = vke::map_vec(info.color_attachments, [&](VkAttachmentReference c) {
-            return m_attachment_infos[c.attachment].description.format;
-        });
-        d.subpass_index     = subpass_index++;
+        d.renderpass                = this;
+        d.render_target_description = {
+            .color_attachments = vke::map_vec2small_vec<0>(info.color_attachments, [&](VkAttachmentReference c) { return m_attachment_infos[c.attachment].description.format; }),
+            .depth_attachment  = m_attachment_infos[info.depth_attachment->attachment].description.format,
+        };
+        d.subpass_index = subpass_index++;
         return d;
     });
 

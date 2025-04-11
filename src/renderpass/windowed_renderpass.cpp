@@ -31,7 +31,10 @@ WindowRenderPass::WindowRenderPass(Window* window, bool has_depth) {
     create_framebuffers();
 
     SubpassDetails sp;
-    sp.color_attachments = {m_window->surface()->get_swapchain_image_format()};
+    sp.render_target_description = {
+        .color_attachments = {m_window->surface()->get_swapchain_image_format()}, 
+    };
+
     sp.renderpass        = this;
     sp.subpass_index     = 0;
 

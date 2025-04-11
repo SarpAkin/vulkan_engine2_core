@@ -1,12 +1,26 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 #include "common.hpp"
 #include "fwd.hpp"
+#include "util/slim_vec.hpp"
 
 namespace vke {
+
+struct PipelineRenderTargetDescription {
+    vke::SmallVec<VkFormat> color_attachments;
+    std::optional<VkFormat> depth_attachment;
+
+    //these are for providing a default value when the these are no explicitly specified on the pipeline creation info
+    std::optional<VkCompareOp> depth_compare_op;
+    std::optional<VkCullModeFlagBits> m_cull_mode;
+
+    // these dynamic states should be used in all pipelines that target this 
+    vke::SmallVec<VkDynamicState> additional_dynamic_states;
+};
 
 class ISubpass {
 public:
@@ -15,7 +29,11 @@ public:
     virtual u32 get_attachment_count() const              = 0;
     virtual vke::Renderpass* get_vke_renderpass() const   = 0;
     virtual std::unique_ptr<ISubpass> create_copy() const = 0;
-    virtual ~ISubpass()                                   = default;
+
+    virtual bool is_renderpass() const { return true; }
+    virtual PipelineRenderTargetDescription get_attachment_info() const = 0;
+
+    virtual ~ISubpass() = default;
 };
 
 class SubpassDescription : public ISubpass {
