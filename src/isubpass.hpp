@@ -14,7 +14,7 @@ struct PipelineRenderTargetDescription {
     vke::SmallVec<VkFormat> color_attachments;
     std::optional<VkFormat> depth_attachment;
 
-    // these are for providing a default value when the these are no explicitly specified on the pipeline creation info
+    // these overwrite the values in pipeline builder so use responsibly
     std::optional<VkCompareOp> depth_compare_op;
     std::optional<VkCullModeFlagBits> cull_mode;
     VkFrontFace front_face = VK_FRONT_FACE_CLOCKWISE;

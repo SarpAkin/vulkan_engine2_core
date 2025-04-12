@@ -103,6 +103,15 @@ GPipelineBuilder::GPipelineBuilder() {
 std::unique_ptr<Pipeline> GPipelineBuilder::build() {
     assert(m_renderpass);
 
+    // declare in the outer scope to extend its lifetime to the end of function
+    PipelineRenderTargetDescription subpass_data;
+    if (m_isubpass) {
+        subpass_data           = m_isubpass->get_attachment_info();
+        m_rasterizer.frontFace = subpass_data.front_face;
+        if (subpass_data.cull_mode) m_rasterizer.cullMode = subpass_data.cull_mode.value();
+        if (subpass_data.depth_compare_op) m_depth_stencil.depthCompareOp = subpass_data.depth_compare_op.value();
+    }
+
     if (default_depth) {
         // set_depth_testing(m_renderpass->has_depth(m_subpass_index));
         set_depth_testing(false);
@@ -131,15 +140,16 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
         .pAttachments    = m_color_blend_attachments.data(),
     };
 
-    VkDynamicState dynamic_states[] = {
+    std::vector<VkDynamicState> dynamic_states = {
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR,
     };
+    dynamic_states.insert(dynamic_states.end(), subpass_data.additional_dynamic_states.begin(), subpass_data.additional_dynamic_states.end());
 
     VkPipelineDynamicStateCreateInfo dynamic_state_info = {
         .sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-        .dynamicStateCount = static_cast<u32>(ARRAY_LEN(dynamic_states)),
-        .pDynamicStates    = dynamic_states,
+        .dynamicStateCount = static_cast<u32>(dynamic_states.size()),
+        .pDynamicStates    = dynamic_states.data(),
     };
 
     // must be called before creating shader stages since it can create shader modules if their stage is left to default
@@ -147,7 +157,7 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
 
     bool is_mesh_shader = false;
 
-    auto shader_stages = MAP_VEC_ALLOCA(m_shader_details, [&](const ShaderDetails& shader_detail) {
+    auto shader_stages = vke::map_vec2small_vec(m_shader_details, [&](const ShaderDetails& shader_detail) {
         if (shader_detail.stage == VK_SHADER_STAGE_MESH_BIT_EXT) is_mesh_shader = true;
 
         return VkPipelineShaderStageCreateInfo{
@@ -188,12 +198,8 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
         .basePipelineHandle  = VK_NULL_HANDLE,
     };
 
-    // declare in the outer scope to extend its lifetime to the end of function
-    PipelineRenderTargetDescription subpass_data;
     if (m_isubpass ? !m_isubpass->is_renderpass() : false) {
-        assert(get_context()->get_device_info()->features1_3.dynamicRendering); 
-
-        subpass_data = m_isubpass->get_attachment_info();
+        assert(get_context()->get_device_info()->features1_3.dynamicRendering);
 
         rendering_create_info.colorAttachmentCount    = subpass_data.color_attachments.size();
         rendering_create_info.pColorAttachmentFormats = subpass_data.color_attachments.data();
