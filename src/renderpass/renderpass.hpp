@@ -44,6 +44,8 @@ public: // getters
     inline VkRenderPass handle() const { return m_renderpass; }
     inline const SubpassDetails* get_subpass(usize subpass_index) const { return &m_subpasses[subpass_index]; }
 
+    PipelineRenderTargetDescription& get_render_target_description(usize subpass_index) { return m_subpasses[subpass_index].render_target_description; }
+
     void set_target_size(IRenderTargetSize* target) { m_target_size = target; }
 
     virtual void resize(CommandBuffer& cmd, u32 width, u32 height);
