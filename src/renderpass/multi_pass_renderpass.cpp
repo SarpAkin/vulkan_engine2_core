@@ -6,6 +6,8 @@
 #include "../window/surface.hpp"
 #include "../window/window.hpp"
 
+#include "../commandbuffer.hpp"
+
 #include "renderpass_builder.hpp"
 
 namespace vke {
@@ -74,32 +76,47 @@ void MultiPassRenderPass::create_framebuffers() {
         .layers          = 1,
     };
 
+    if (!m_framebuffers.empty()) {
+        LOG_WARNING("creating framebuffers while m_framebuffers isn't empty. clearing frame buffers!");
+        m_framebuffers.clear();
+    }
+
     if (m_has_surface_attachment) {
         auto surface                = m_window->surface();
         auto& swapchain_image_views = surface->get_swapchain_image_views();
 
-        m_framebuffers.resize(swapchain_image_views.size());
-
         for (u32 i; i < swapchain_image_views.size(); i++) {
             attachment_views[m_surface_attachment_index] = swapchain_image_views[i];
-            VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &m_framebuffers[i]));
+
+            VkFramebuffer framebuffer;
+            VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &framebuffer));
+
+            m_framebuffers.push_back(std::make_unique<impl::Framebuffer>(framebuffer));
         }
     } else {
-        m_framebuffers.resize(1);
-        VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &m_framebuffers[0]));
+        VkFramebuffer framebuffer;
+        VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &framebuffer));
+
+        m_framebuffers.push_back(std::make_unique<impl::Framebuffer>(framebuffer));
+    }
+
+    for (auto& fb : m_framebuffers) {
+        for (auto& attachment : m_attachments) {
+            fb->add_execution_dependency(attachment.image->get_reference());
+        }
     }
 }
 
 void MultiPassRenderPass::destroy_framebuffers() {
-    for (auto& fb : m_framebuffers) {
-        vkDestroyFramebuffer(device(), fb, nullptr);
-        fb = nullptr;
-    }
+    // for (auto& fb : m_framebuffers) {
+    //     vkDestroyFramebuffer(device(), fb, nullptr);
+    //     fb = nullptr;
+    // }
     m_framebuffers.resize(0);
 }
 
 VkFramebuffer MultiPassRenderPass::next_framebuffer() {
-    return m_window ? m_framebuffers[m_window->surface()->get_swapchain_image_index()] : m_framebuffers[0];
+    return m_framebuffers[m_window ? m_window->surface()->get_swapchain_image_index() : 0]->handle();
 }
 
 MultiPassRenderPass::~MultiPassRenderPass() {
@@ -111,8 +128,23 @@ void MultiPassRenderPass::begin(CommandBuffer& cmd) {
         m_window->surface()->prepare();
     }
 
+    cmd.add_execution_dependency(m_framebuffers[m_window ? m_window->surface()->get_swapchain_image_index() : 0]->get_reference());
+
     Renderpass::begin(cmd);
 }
 
 IImageView* MultiPassRenderPass::get_attachment_view(u32 index) { return m_attachments[index].image.get(); }
+
+void MultiPassRenderPass::resize(CommandBuffer& cmd, u32 width, u32 height) {
+    LOG_INFO("resizing multi render pass to (%d,%d)", width, height);
+
+    m_attachments.clear();
+    destroy_framebuffers();
+
+    m_width = width;
+    m_height = height;
+
+    create_attachments();
+    create_framebuffers();
+};
 } // namespace vke

@@ -30,3 +30,9 @@ bool is_depth_format(VkFormat format);
             assert(0);                                                                                \
         }                                                                                             \
     }
+
+namespace vke {
+inline bool is_equal(const VkExtent2D& a, const VkExtent2D& b) {
+    return (a.width == b.width) && (a.height == b.height);
+}
+} // namespace vke

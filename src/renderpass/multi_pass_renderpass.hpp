@@ -25,6 +25,8 @@ public:
     IImageView* get_attachment_view(u32 index) override;
     bool has_depth(u32 subpass) override { return true; }
 
+    void resize(CommandBuffer& cmd, u32 width, u32 height) override;
+
 private:
     void create_attachments();
     void create_framebuffers();
@@ -43,7 +45,7 @@ private:
     bool m_has_surface_attachment  = false;
     u32 m_surface_attachment_index = UINT32_MAX;
 
-    std::vector<VkFramebuffer> m_framebuffers;
+    std::vector<RCResource<impl::Framebuffer>> m_framebuffers;
     std::vector<impl::AttachmentInfo> m_attachment_infos;
 
     std::vector<Attachment> m_attachments;
