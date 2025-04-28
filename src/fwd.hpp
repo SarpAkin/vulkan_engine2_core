@@ -34,6 +34,9 @@ class IPipeline;
 
 class Window;
 class Renderpass;
+
+template<class T>
+class RCResource;
 } // namespace vke
 
 // vulkan-hpp fwds
