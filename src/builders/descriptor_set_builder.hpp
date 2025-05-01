@@ -38,7 +38,9 @@ public:
     DescriptorSetBuilder& add_image_samplers(std::span<std::pair<IImageView*, VkSampler>> images, VkImageLayout layout, VkShaderStageFlags stage);
 
     VkDescriptorSet build(DescriptorPool* pool, VkDescriptorSetLayout layout);
-    
+    // updates an existing descriptor set according to the builder
+    // the set must have the same layout as the layout
+    void update_set(VkDescriptorSet set, VkDescriptorSetLayout layout) { write_to_set(set, layout); }
 
 private:
     inline DescriptorSetBuilder& add_buffer(IBufferSpan* buffer, VkShaderStageFlags stage, VkDescriptorType type) {
@@ -48,6 +50,8 @@ private:
 
     DescriptorSetBuilder& add_buffers(std::span<IBufferSpan*> buffers, VkShaderStageFlags stage, VkDescriptorType type);
     DescriptorSetBuilder& add_images(std::span<IImageView*> images, VkImageLayout layout, VkSampler sampler, VkShaderStageFlags stage, VkDescriptorType type);
+
+    void write_to_set(VkDescriptorSet set, VkDescriptorSetLayout layout);
 
 private:
     struct ImageBinding {

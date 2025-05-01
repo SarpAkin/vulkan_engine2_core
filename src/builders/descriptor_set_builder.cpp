@@ -80,9 +80,12 @@ DescriptorSetBuilder& DescriptorSetBuilder::add_image_samplers(std::span<std::pa
 }
 
 VkDescriptorSet DescriptorSetBuilder::build(DescriptorPool* pool, VkDescriptorSetLayout layout) {
-
     VkDescriptorSet set = pool->allocate_set(layout);
+    write_to_set(set, layout);
+    return set;
+}
 
+void DescriptorSetBuilder::write_to_set(VkDescriptorSet set, VkDescriptorSetLayout layout) {
     std::vector<VkWriteDescriptorSet> writes;
     writes.reserve(m_buffer_bindings.size() + m_image_bindings.size());
 
@@ -109,8 +112,6 @@ VkDescriptorSet DescriptorSetBuilder::build(DescriptorPool* pool, VkDescriptorSe
     }
 
     vkUpdateDescriptorSets(VulkanContext::get_context()->get_device(), writes.size(), writes.data(), 0, nullptr);
-
-    return set;
 }
 
 DescriptorSetBuilder& DescriptorSetBuilder::add_image_samplers(std::span<Image*> images, VkImageLayout layout, VkSampler sampler, VkShaderStageFlags stage) {
