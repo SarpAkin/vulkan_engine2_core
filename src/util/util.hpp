@@ -33,10 +33,16 @@ namespace std {
 namespace filesystem {
 
 }
+
+namespace ranges {
+namespace views {
+}
+} // namespace ranges
 } // namespace std
 
 namespace vke {
-namespace fs = std::filesystem;
+namespace fs    = std::filesystem;
+namespace views = std::ranges::views;
 
 class ArenaAllocator;
 
@@ -235,12 +241,12 @@ std::optional<T> try_pop_front(std::deque<T>& deque) {
     return front;
 }
 
-template<class T>
-std::vector<T> merge_into_vector(auto&& a,auto&& b){
+template <class T>
+std::vector<T> merge_into_vector(auto&& a, auto&& b) {
     std::vector<T> out;
     out.reserve(a.size() + b.size());
-    out.insert(out.end(),a.begin(),a.end());
-    out.insert(out.end(),b.begin(),b.end());
+    out.insert(out.end(), a.begin(), a.end());
+    out.insert(out.end(), b.begin(), b.end());
     return out;
 }
 
