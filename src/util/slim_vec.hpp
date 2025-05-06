@@ -453,17 +453,17 @@ private:
         return (total_needed_space + 7) / 8;
     }
 
-private:
-    constexpr static size_t _small_vec_byte_space    = offsetof(SlimVec, m_size);
-    constexpr static size_t _small_vec_item_capacity = _small_vec_byte_space / sizeof(T);
-    constexpr static bool _small_vec                 = smallVec && _small_vec_item_capacity >= 1;
-    constexpr static uint32_t _small_vec_base_size   = UINT32_MAX - (_small_vec_item_capacity + 1);
-
 private: // fields
     T* m_data_ptr = nullptr;
     // on the small vec mode, from the start of m_data_ptr to begining of m_size is used for storage
     size_t m_extra_dummy_storage[calculate_data_array_size()];
     uint32_t m_capacity = 0, m_size = _small_vec ? _small_vec_base_size : 0;
+
+private:
+    constexpr static size_t _small_vec_byte_space    = offsetof(SlimVec, m_size);
+    constexpr static size_t _small_vec_item_capacity = _small_vec_byte_space / sizeof(T);
+    constexpr static bool _small_vec                 = smallVec && _small_vec_item_capacity >= 1;
+    constexpr static uint32_t _small_vec_base_size   = UINT32_MAX - (_small_vec_item_capacity + 1);
 };
 
 template <class T, size_t MinStackSlots = 0>
