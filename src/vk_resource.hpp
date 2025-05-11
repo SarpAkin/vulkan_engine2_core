@@ -153,7 +153,7 @@ public:
 
         m_ptr->increment_reference_count();
 
-        return RCResource(m_ptr);
+        return RCResource<T1>(m_ptr);
     }
 
     bool is_null() const { return m_ptr == nullptr; }
