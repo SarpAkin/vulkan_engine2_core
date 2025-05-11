@@ -35,6 +35,8 @@ class IPipeline;
 class Window;
 class Renderpass;
 
+class GPUTimer;
+
 template<class T>
 class RCResource;
 } // namespace vke
