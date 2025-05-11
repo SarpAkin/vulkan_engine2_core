@@ -57,7 +57,7 @@ auto map_vec(auto&& vector, auto&& f) {
     if constexpr (requires { vector.size(); }) {
         results.reserve(vector.size());
     }
-    for (const auto& element : vector) {
+    for (auto& element : vector) {
         results.push_back(f(element));
     }
 
@@ -70,7 +70,7 @@ auto map_vec2small_vec(auto&& vector, auto&& f) {
     if constexpr (requires { vector.size(); }) {
         results.reserve(vector.size());
     }
-    for (const auto& element : vector) {
+    for (auto& element : vector) {
         results.push_back(f(element));
     }
 
