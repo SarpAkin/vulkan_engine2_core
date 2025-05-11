@@ -27,6 +27,8 @@ public:
 
     void resize(CommandBuffer& cmd, u32 width, u32 height) override;
 
+    void set_active_frame_buffer_instance(u32 i) override;
+
 private:
     void create_attachments();
     void create_framebuffers();

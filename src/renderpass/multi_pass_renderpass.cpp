@@ -22,6 +22,9 @@ MultiPassRenderPass::MultiPassRenderPass(RenderPassBuilder* builder, u32 width, 
     m_attachment_infos = builder->m_attachment_infos;
     m_renderpass       = builder->create_vk_renderpass();
 
+    m_attachment_layer_count      = builder->m_layer_count;
+    m_frame_buffer_instance_count = builder->m_layer_count;
+
     m_subpasses = vke::map_vec(builder->m_subpass_info, [&](const impl::SubpassInfo& info) {
         SubpassDetails d;
         d.renderpass                = this;
@@ -55,54 +58,69 @@ void MultiPassRenderPass::create_attachments() {
                 .usage_flags = flags,
                 .width       = width(),
                 .height      = height(),
-                .layers      = 1,
+                .layers      = m_attachment_layer_count,
             })),
         };
     });
 }
 
 void MultiPassRenderPass::create_framebuffers() {
-    auto attachment_views = MAP_VEC_ALLOCA(m_attachments, [](const Attachment& att) {
-        return att.image != nullptr ? att.image->view() : nullptr;
-    });
-
-    VkFramebufferCreateInfo fb_info = {
-        .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-        .renderPass      = m_renderpass,
-        .attachmentCount = static_cast<uint32_t>(attachment_views.size()),
-        .pAttachments    = attachment_views.data(),
-        .width           = m_width,
-        .height          = m_height,
-        .layers          = 1,
-    };
+    assert(!(m_attachment_layer_count > 1 && m_has_surface_attachment) && "multi layers and surface attachments are not supported for MultiPassRenderPass");
+    assert(m_rendered_layer_count == 1 && "m_rendered_layer_count of only 1 is supported");
 
     if (!m_framebuffers.empty()) {
         LOG_WARNING("creating framebuffers while m_framebuffers isn't empty. clearing frame buffers!");
         m_framebuffers.clear();
     }
 
-    if (m_has_surface_attachment) {
-        auto surface                = m_window->surface();
-        auto& swapchain_image_views = surface->get_swapchain_image_views();
+    for (u32 i = 0; i < m_attachment_layer_count; i++) {
 
-        for (u32 i; i < swapchain_image_views.size(); i++) {
-            attachment_views[m_surface_attachment_index] = swapchain_image_views[i];
+        auto vke_views = vke ::map_vec2small_vec(m_attachments, [&](Attachment& att) -> vke::RCResource<IImageView> {
+            assert(att.image != nullptr && "attachment image cannot be null");
+            if (i == 0) return att.image;
 
+            return dynamic_cast<vke::Image*>(att.image.get())->create_subview(SubViewArgs{
+                .base_layer  = i,
+                .layer_count = 1,
+                .view_type   = VK_IMAGE_VIEW_TYPE_2D,
+            });
+        });
+
+        auto attachment_views = vke ::map_vec2small_vec(vke_views, [](const RCResource<IImageView>& view) { return view->view(); });
+
+        VkFramebufferCreateInfo fb_info = {
+            .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .renderPass      = m_renderpass,
+            .attachmentCount = static_cast<uint32_t>(attachment_views.size()),
+            .pAttachments    = attachment_views.data(),
+            .width           = m_width,
+            .height          = m_height,
+            .layers          = 1,
+        };
+
+        if (m_has_surface_attachment) {
+            auto surface                = m_window->surface();
+            auto& swapchain_image_views = surface->get_swapchain_image_views();
+
+            for (u32 i; i < swapchain_image_views.size(); i++) {
+                attachment_views[m_surface_attachment_index] = swapchain_image_views[i];
+
+                VkFramebuffer framebuffer;
+                VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &framebuffer));
+
+                m_framebuffers.push_back(std::make_unique<impl::Framebuffer>(framebuffer));
+            }
+        } else {
             VkFramebuffer framebuffer;
             VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &framebuffer));
 
             m_framebuffers.push_back(std::make_unique<impl::Framebuffer>(framebuffer));
         }
-    } else {
-        VkFramebuffer framebuffer;
-        VK_CHECK(vkCreateFramebuffer(device(), &fb_info, nullptr, &framebuffer));
 
-        m_framebuffers.push_back(std::make_unique<impl::Framebuffer>(framebuffer));
-    }
-
-    for (auto& fb : m_framebuffers) {
-        for (auto& attachment : m_attachments) {
-            fb->add_execution_dependency(attachment.image->get_reference());
+        for (auto& fb : m_framebuffers) {
+            for (auto& view : vke_views) {
+                fb->add_execution_dependency(view->get_reference());
+            }
         }
     }
 }
@@ -116,7 +134,17 @@ void MultiPassRenderPass::destroy_framebuffers() {
 }
 
 VkFramebuffer MultiPassRenderPass::next_framebuffer() {
-    return m_framebuffers[m_window ? m_window->surface()->get_swapchain_image_index() : 0]->handle();
+    u32 base_index = m_active_frame_buffer_instance;
+
+    if (m_has_surface_attachment) {
+        assert(m_window);
+        auto* surface = m_window->surface();
+        assert(surface);
+        base_index *= surface->get_swapchain_images().size();
+        return m_framebuffers[base_index + surface->get_swapchain_image_index()]->handle();
+    }
+
+    return m_framebuffers[base_index]->handle();
 }
 
 MultiPassRenderPass::~MultiPassRenderPass() {
@@ -141,10 +169,16 @@ void MultiPassRenderPass::resize(CommandBuffer& cmd, u32 width, u32 height) {
     m_attachments.clear();
     destroy_framebuffers();
 
-    m_width = width;
+    m_width  = width;
     m_height = height;
 
     create_attachments();
     create_framebuffers();
 };
+
+void MultiPassRenderPass::set_active_frame_buffer_instance(u32 i)  {
+    assert(i < m_frame_buffer_instance_count && "active instance must be in the range of frame buffer instance count!");
+
+    m_active_frame_buffer_instance = i;
+}
 } // namespace vke

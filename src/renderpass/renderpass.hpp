@@ -50,6 +50,30 @@ public: // getters
 
     virtual void resize(CommandBuffer& cmd, u32 width, u32 height);
 
+public: // renderpass layers
+    // Returns the total number of layers in the image attachments.
+    // This reflects the actual layer count of the texture/image views bound to the renderpass.
+    u32 attachment_layer_count() const { return m_attachment_layer_count; }
+
+    // Returns how many layers are being rendered in the current framebuffer.
+    // Used in multiview or array-layer rendering scenarios.
+    u32 rendered_layer_count() const { return m_rendered_layer_count; }
+
+    // Returns the base layer index from which rendering starts in the attachment.
+    // Useful when rendering to a specific slice of a texture array.
+    u32 rendered_attachment_base_layer() const { return m_rendered_attachment_base_layer; }
+
+    // Returns the number of logical framebuffer instances used by this renderpass.
+    // This may not match the swapchain image count directly, but typically correlates with it.
+    u32 frame_buffer_instance_count() const { return m_frame_buffer_instance_count; }
+
+    // Returns the currently active framebuffer instance index.
+    // This is used internally to select which framebuffer to use when rendering.
+    u32 active_frame_buffer_instance() const { return m_active_frame_buffer_instance; }
+
+    // Sets the active framebuffer instance index. Override if your implementation allows multiple indices.
+    virtual void set_active_frame_buffer_instance(u32 i) { assert(i == 0 && "this renderpass only supports setting active_frame_buffer_instance to 0!"); }
+
 public: // methods
     virtual void set_states(CommandBuffer& cmd);
     virtual IImageView* get_attachment_view(u32 index) = 0;
@@ -68,6 +92,10 @@ protected:
 protected:
     bool m_is_external = false;
     u32 m_width, m_height;
+    // layers
+    u32 m_attachment_layer_count = 1, m_rendered_layer_count = 1, m_rendered_attachment_base_layer = 0;
+    u32 m_frame_buffer_instance_count = 1, m_active_frame_buffer_instance = 0;
+
     VkRenderPass m_renderpass        = nullptr; // should be destroyed by this class, created by child class.
     IRenderTargetSize* m_target_size = nullptr;
     std::vector<VkClearValue> m_clear_values;
