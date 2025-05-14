@@ -63,6 +63,8 @@ public:
     void bind_index_buffer(const IBufferSpan* buffer, VkIndexType index_type = VK_INDEX_TYPE_UINT16);
     void bind_index_buffer(const IBufferSpan& buffer, VkIndexType index_type = VK_INDEX_TYPE_UINT16) { bind_index_buffer(&buffer, index_type); }
 
+    void bind_vertex_buffer(std::span<const VkBuffer> buffers, std::span<const VkDeviceSize> offsets);
+    void bind_vertex_buffer(std::span<const std::unique_ptr<IBufferSpan>> buffer);
     void bind_vertex_buffer(const std::span<const IBufferSpan*>& buffer);
     void bind_vertex_buffer(const std::initializer_list<const IBufferSpan*>& buffer);
     void bind_descriptor_set(u32 index, VkDescriptorSet set);

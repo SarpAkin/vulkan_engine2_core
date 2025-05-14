@@ -10,6 +10,7 @@
 #include "isubpass.hpp"
 #include "pipeline.hpp"
 #include "renderpass/renderpass.hpp"
+#include "util/function_timer.hpp"
 #include "util/util.hpp"
 #include "vk_resource.hpp"
 #include "vkutil.hpp"
@@ -118,6 +119,18 @@ void CommandBuffer::bind_pipeline(IPipeline* pipeline) {
 
     flush_postponed_descriptor_sets();
 }
+
+void CommandBuffer::bind_vertex_buffer(std::span<const VkBuffer> buffers, std::span<const VkDeviceSize> offsets) {
+    m_dt->vkCmdBindVertexBuffers(handle(), 0, buffers.size(), buffers.data(), offsets.data());
+}
+
+void CommandBuffer::bind_vertex_buffer(std::span<const std::unique_ptr<IBufferSpan>> buffer) {
+    auto handles = MAP_VEC_ALLOCA(buffer, [](const std::unique_ptr<IBufferSpan>& buffer) { return buffer->handle(); });
+    auto offsets = MAP_VEC_ALLOCA(buffer, [](const std::unique_ptr<IBufferSpan>& buffer) { return (VkDeviceSize)buffer->byte_offset(); });
+
+    m_dt->vkCmdBindVertexBuffers(handle(), 0, buffer.size(), handles.data(), offsets.data());
+}
+
 
 void CommandBuffer::bind_vertex_buffer(const std::span<const IBufferSpan*>& buffer) {
     auto handles = MAP_VEC_ALLOCA(buffer, [](const IBufferSpan* buffer) { return buffer->handle(); });
