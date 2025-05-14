@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../src/debug/gpu_timer.hpp"        // IWYU pragma: export
+#include "../src/util/function_timer.hpp"    // IWYU pragma: export
 #include "../src/util/id_manager.hpp"        // IWYU pragma: export
 #include "../src/util/slim_vec.hpp"          // IWYU pragma: export
 #include "../src/util/stencil_buffer.hpp"    // IWYU pragma: export
