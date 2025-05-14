@@ -67,11 +67,18 @@ auto map_vec(auto&& vector, auto&& f) {
 template <size_t small_vec_size = 8>
 auto map_vec2small_vec(auto&& vector, auto&& f) {
     vke::SmallVec<decltype(f(*vector.begin())), small_vec_size> results;
-    if constexpr (requires { vector.size(); }) {
+
+    constexpr bool is_size_available = requires { vector.size(); };
+    
+    if constexpr (is_size_available) {
         results.reserve(vector.size());
     }
     for (auto& element : vector) {
-        results.push_back(f(element));
+        if constexpr(is_size_available){
+            results.push_back_unchecked(f(element));
+        }else{
+            results.push_back(f(element));
+        }
     }
 
     return results;
