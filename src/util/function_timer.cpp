@@ -62,7 +62,9 @@ public:
 private:
     std::mutex m_lock;
     std::unordered_map<const char*, FunctionStats> m_stats;
-} global_man;
+};
+
+static GlobalTimingManager global_man;
 
 class TimingManager {
 public:
