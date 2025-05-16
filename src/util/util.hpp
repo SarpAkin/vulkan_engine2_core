@@ -50,6 +50,10 @@ constexpr u32 calculate_dispatch_size(u32 x, u32 subgroup_size) {
     return (x + (subgroup_size - 1)) / subgroup_size;
 }
 
+constexpr std::tuple<u32, u32> calculate_dispatch_size(u32 x, u32 y, u32 subgroup_size_x, u32 subgroup_size_y) {
+    return {calculate_dispatch_size(x, subgroup_size_x), calculate_dispatch_size(y, subgroup_size_y)};
+}
+
 void name_thread(std::thread& thread, const char* name);
 
 auto map_vec(auto&& vector, auto&& f) {
@@ -69,14 +73,14 @@ auto map_vec2small_vec(auto&& vector, auto&& f) {
     vke::SmallVec<decltype(f(*vector.begin())), small_vec_size> results;
 
     constexpr bool is_size_available = requires { vector.size(); };
-    
+
     if constexpr (is_size_available) {
         results.reserve(vector.size());
     }
     for (auto& element : vector) {
-        if constexpr(is_size_available){
+        if constexpr (is_size_available) {
             results.push_back_unchecked(f(element));
-        }else{
+        } else {
             results.push_back(f(element));
         }
     }
