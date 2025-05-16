@@ -46,8 +46,6 @@ Image::Image(const ImageArgs& args) {
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
 
-    
-
     auto gpu_alloc = VulkanContext::get_context()->gpu_allocator();
 
     VK_CHECK(vmaCreateImage(gpu_alloc, &ic_info, &dimg_allocinfo, &m_image, &m_allocation, nullptr));
@@ -206,7 +204,17 @@ std::unique_ptr<IImageView> Image::create_subview(const SubViewArgs& args) {
     return std::make_unique<ImageView>(this, ivc_info);
 }
 
-VkFormat IImageView::format() { return vke_image()->format(); }
-u32 IImageView::height() { return vke_image()->height(); }
-u32 IImageView::width() { return vke_image()->width(); }
+VkFormat IImageView::format() const { return vke_image()->format(); }
+u32 IImageView::height() const { return vke_image()->height(); }
+u32 IImageView::width() const { return vke_image()->width(); }
+
+VkImageSubresourceRange IImageView::get_subresource_range() const {
+    return VkImageSubresourceRange{
+        .aspectMask     = is_depth_format(this->format()) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT,
+        .baseMipLevel   = this->base_miplevel(),
+        .levelCount     = this->miplevel_count(),
+        .baseArrayLayer = this->base_layer(),
+        .layerCount     = this->layer_count(),
+    };
+}
 } // namespace vke

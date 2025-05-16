@@ -11,6 +11,8 @@ public:
     ~ImageView();
 
     Image* vke_image() override { return m_vke_image; }
+    const Image* vke_image() const override { return m_vke_image; }
+
     VkImageView view() const override { return m_view; }
 
     u32 layer_count() const override { return m_subresource_range.layerCount; }
@@ -19,6 +21,8 @@ public:
     u32 base_miplevel() const override { return m_subresource_range.baseMipLevel; }
 
     VkImageViewType view_type() const override { return m_view_type; }
+
+    
 
 private:
     VkImageView m_view = VK_NULL_HANDLE;

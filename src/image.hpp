@@ -44,21 +44,26 @@ struct SubViewArgs {
 
 class IImageView : public Resource {
 public:
-    virtual VkImageView view() const = 0;
-    virtual Image* vke_image()       = 0;
-    virtual VkFormat format();
+    virtual VkImageView view() const       = 0;
+    virtual Image* vke_image()             = 0;
+    virtual const Image* vke_image() const = 0;
+    virtual VkFormat format() const;
 
     virtual u32 base_layer() const     = 0;
     virtual u32 layer_count() const    = 0;
     virtual u32 base_miplevel() const  = 0;
     virtual u32 miplevel_count() const = 0;
 
+    virtual VkImageSubresourceRange get_subresource_range() const;
+
     virtual VkImageViewType view_type() const = 0;
 
     virtual VkSampler get_default_sampler() const { return VK_NULL_HANDLE; }
 
-    virtual u32 width();
-    virtual u32 height();
+    virtual u32 width() const;
+    virtual u32 height() const;
+
+    VkExtent2D extend() const { return {width(), height()}; }
 
     virtual ~IImageView() {};
 };
@@ -75,11 +80,11 @@ public:
 public: // getters
     VkImage handle() const { return m_image; }
     VkImageView view() const override { return m_view; }
-    VkFormat format() const { return m_format; }
+    VkFormat format() const override { return m_format; }
     VkImageAspectFlags aspects() { return m_aspects; }
 
-    u32 width() const { return m_width; }
-    u32 height() const { return m_height; }
+    u32 width() const override { return m_width; }
+    u32 height() const override { return m_height; }
     u32 layer_count() const override { return m_num_layers; }
     u32 miplevel_count() const override { return m_num_mipmaps; }
 
@@ -108,6 +113,7 @@ public: // static methods
 
 private: // hide unnecessary methods from interface IImageView
     Image* vke_image() override { return this; }
+    const Image* vke_image() const override { return this; }
     u32 base_layer() const override { return 0; }
     u32 base_miplevel() const override { return 0; }
 
