@@ -195,7 +195,7 @@ std::unique_ptr<IImageView> Image::create_subview(const SubViewArgs& args) {
         .subresourceRange = {
             .aspectMask     = aspects(),
             .baseMipLevel   = args.base_miplevel,
-            .levelCount     = args.miplevel_count == UINT32_MAX ? miplevel_count() - args.base_miplevel : args.base_miplevel,
+            .levelCount     = args.miplevel_count == UINT32_MAX ? miplevel_count() - args.base_miplevel : args.miplevel_count,
             .baseArrayLayer = args.base_layer,
             .layerCount     = args.layer_count,
         },
