@@ -22,13 +22,17 @@ public:
 
     VkImageViewType view_type() const override { return m_view_type; }
 
-    
+    VkImageSubresourceRange get_subresource_range() const override { return m_subresource_range; }
+
+    virtual u32 width() const override{return m_extends.width;}
+    virtual u32 height()const override{return m_extends.height;}
 
 private:
     VkImageView m_view = VK_NULL_HANDLE;
     Image* m_vke_image;
     VkImageSubresourceRange m_subresource_range;
     VkImageViewType m_view_type;
+    VkExtent2D m_extends;
 };
 
 } // namespace vke
