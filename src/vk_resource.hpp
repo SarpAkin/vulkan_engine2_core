@@ -72,7 +72,6 @@ private:
 
 template <class T>
 class RCResource {
-    static_assert(std::is_base_of<Resource, T>::value, "T must inherit from Resource");
 
     friend Resource;
 
@@ -88,6 +87,8 @@ public:
     }
 
     RCResource(T* ptr) {
+        static_assert(std::is_base_of<Resource, T>::value, "T must inherit from Resource");
+
         if (ptr == nullptr) {
             m_ptr = nullptr;
             return;
