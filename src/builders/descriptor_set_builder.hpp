@@ -35,6 +35,10 @@ public:
         return add_images(images, layout, VK_NULL_HANDLE, stage, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     }
 
+    inline DescriptorSetBuilder& add_storage_images(std::span<IImageView*> images, VkImageLayout layout, VkShaderStageFlags stage) {
+        return add_images(images, layout, VK_NULL_HANDLE, stage, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    }
+
     DescriptorSetBuilder& add_image_samplers(std::span<std::pair<IImageView*, VkSampler>> images, VkImageLayout layout, VkShaderStageFlags stage);
 
     VkDescriptorSet build(DescriptorPool* pool, VkDescriptorSetLayout layout);
