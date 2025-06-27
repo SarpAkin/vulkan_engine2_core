@@ -42,8 +42,7 @@ target_include_directories(vke INTERFACE
     ${VKE_INCLUDE}
 )
 
-# target_compile_options(vke PUBLIC
-#     -DGLM_FORCE_DEPTH_ZERO_TO_ONE
-#     -DGLM_FORCE_RADIANS
-# )
 
+if(CMAKE_BUILD_TYPE STREQUAL "DebugOnlyEngine")
+    target_compile_options(vke PRIVATE -O3 -g)
+endif()
