@@ -18,8 +18,8 @@ void Surface::init_swapchain() {
         vkb::SwapchainBuilder(vke::VulkanContext::get_context()->get_physical_device(), device(), m_surface)
             .use_default_format_selection()
             // use vsync present mode
-            .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-            // .set_desired_extent(m_width, m_height)
+            .set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR)
+            .set_desired_extent(m_window->width(), m_window->height())
             .set_old_swapchain(m_swapchain)
             .build()
             .value();
@@ -28,7 +28,7 @@ void Surface::init_swapchain() {
         destroy_swapchain();
     }
 
-    m_width = vkb_swapchain.extent.width;
+    m_width  = vkb_swapchain.extent.width;
     m_height = vkb_swapchain.extent.height;
 
     m_swapchain_image_format = vkb_swapchain.image_format;
@@ -36,8 +36,9 @@ void Surface::init_swapchain() {
     m_swapchain_image_views  = vkb_swapchain.get_image_views().value();
     m_swapchain_images       = vkb_swapchain.get_images().value();
 
-    m_prepare_semaphores.resize(m_swapchain_images.size());
-    m_wait_semaphores.resize(m_swapchain_images.size());
+    int extra_semaphore_count = 3;
+    m_prepare_semaphores.resize(m_swapchain_images.size() + extra_semaphore_count);
+    m_wait_semaphores.resize(m_swapchain_images.size() + extra_semaphore_count);
 }
 
 Surface::~Surface() {
@@ -85,6 +86,7 @@ VkAttachmentDescription Surface::get_color_attachment() const {
 
 bool Surface::prepare(u64 time_out) {
     assert(m_current_prepare_semaphore == nullptr && "called prepare 2 times before calling present!");
+    assert(m_swapchain_image_index < m_wait_semaphores.size());
 
     auto& prepare_semaphore = m_prepare_semaphores[m_frame_index];
     auto& wait_semaphore    = m_wait_semaphores[m_frame_index];
@@ -141,7 +143,13 @@ u32 Surface::width() const {
     return m_width;
 }
 void Surface::recrate_swapchain() {
-    printf("recrating swapchin! window size: (%d,%d)\n", width(), height());
+    printf("recrating swapchain! window size: (%d,%d)\n", width(), height());
+    init_swapchain();
+}
+
+Surface::Surface(VkSurfaceKHR surface, Window* window) {
+    m_surface = surface;
+    m_window  = window;
     init_swapchain();
 }
 } // namespace vke

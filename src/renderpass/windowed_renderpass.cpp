@@ -15,8 +15,12 @@
 namespace vke {
 
 WindowRenderPass::WindowRenderPass(Window* window, bool has_depth) {
-    m_width       = window->width();
-    m_height      = window->height();
+    auto* surface = window->surface(); 
+
+    assert(surface->is_initialized() && "surface must be initialized");
+
+    m_width       = surface->width();
+    m_height      = surface->height();
     m_window      = window;
     // m_target_size = window;
 
@@ -32,7 +36,7 @@ WindowRenderPass::WindowRenderPass(Window* window, bool has_depth) {
 
     SubpassDetails sp;
     sp.render_target_description = {
-        .color_attachments = {m_window->surface()->get_swapchain_image_format()}, 
+        .color_attachments = {surface->get_swapchain_image_format()}, 
     };
 
     sp.renderpass        = this;

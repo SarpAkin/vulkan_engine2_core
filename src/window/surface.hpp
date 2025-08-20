@@ -35,11 +35,10 @@ public: // getters
     const std::vector<VkImageView>& get_swapchain_image_views() const { return m_swapchain_image_views; }
     VkAttachmentDescription get_color_attachment() const;
 
-    Surface(VkSurfaceKHR surface, Window* window) {
-        m_surface = surface;
-        m_window  = window;
-    }
+    Surface(VkSurfaceKHR surface, Window* window);
     ~Surface();
+
+    bool is_initialized() const { return m_swapchain != nullptr; }
 
     // must be called after device initialization
     void init_swapchain();
@@ -67,7 +66,7 @@ private:
 
     u32 m_swapchain_image_index = 0;
     u32 m_frame_index           = 0;
-    u32 m_width = 0,m_height = 0;
+    u32 m_width = 0, m_height = 0;
 
     // prepare semaphore is signalled after surface preparetion, wait semapore is used to wait for present
     std::vector<std::unique_ptr<Semaphore>> m_prepare_semaphores, m_wait_semaphores;

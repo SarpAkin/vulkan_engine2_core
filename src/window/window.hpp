@@ -21,8 +21,8 @@ struct MouseInputData {
 
 class Window : public IRenderTargetSize {
 public:
-    u32 width() const override { return m_width; }
-    u32 height() const override { return m_height; }
+    u32 width() const override;
+    u32 height() const override;
     inline bool is_open() const { return m_is_open; }
 
     inline Surface* surface() { return m_surface.get(); }
