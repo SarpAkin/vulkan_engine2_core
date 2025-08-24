@@ -8,8 +8,6 @@
 
 namespace vke {
 
-#define TODO() assert(0)
-
 namespace impl {
 template <class T>
 void __custom_qsort(std::span<T> range, size_t offset, auto&& less, auto&& on_swap, int depth = 0) {
