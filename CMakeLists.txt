@@ -1,9 +1,13 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.30)
 
 project(vke)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
+set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
+set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON CACHE BOOL "" FORCE)
+
 
 find_package(Vulkan REQUIRED)
 
@@ -29,17 +33,24 @@ target_link_libraries(vke PUBLIC
     ${SHADERC_LIBRARIES}
 )
 
-
 target_include_directories(vke PUBLIC 
     ${Vulkan_INCLUDE_DIRS} 
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/ 
     ${VKE_INCLUDE} 
-    ${SHADERC_INCLUDE_DIRS}
+    ${SHADERC_INCLUDE_DIRS} 
+    PRIVATE
+    pch/
+)
+
+
+# Precompiled headers
+target_precompile_headers(vke PRIVATE 
+    "$<$<COMPILE_LANGUAGE:CXX>:pch.hpp>"
 )
 
 
 target_include_directories(vke INTERFACE 
-    ${VKE_INCLUDE}
+    ${VKE_INCLUDE} 
 )
 
 
