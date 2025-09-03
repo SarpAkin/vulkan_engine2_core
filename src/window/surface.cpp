@@ -36,9 +36,8 @@ void Surface::init_swapchain() {
     m_swapchain_image_views  = vkb_swapchain.get_image_views().value();
     m_swapchain_images       = vkb_swapchain.get_images().value();
 
-    int extra_semaphore_count = 3;
-    m_prepare_semaphores.resize(m_swapchain_images.size() + extra_semaphore_count);
-    m_wait_semaphores.resize(m_swapchain_images.size() + extra_semaphore_count);
+    m_prepare_semaphores.resize(m_swapchain_images.size());
+    m_wait_semaphores.resize(m_swapchain_images.size());
 }
 
 Surface::~Surface() {
@@ -88,11 +87,9 @@ bool Surface::prepare(u64 time_out) {
     assert(m_current_prepare_semaphore == nullptr && "called prepare 2 times before calling present!");
     assert(m_swapchain_image_index < m_wait_semaphores.size());
 
-    auto& prepare_semaphore = m_prepare_semaphores[m_frame_index];
-    auto& wait_semaphore    = m_wait_semaphores[m_frame_index];
+    auto& prepare_semaphore = m_prepare_semaphores[m_swapchain_image_index];
     if (prepare_semaphore == nullptr) {
         prepare_semaphore = std::make_unique<Semaphore>(); // lazily initialize semaphore since during surface creation device doesn't exist.
-        wait_semaphore    = std::make_unique<Semaphore>();
     }
 
     auto result = vkAcquireNextImageKHR(device(), m_swapchain, time_out, prepare_semaphore->handle(), nullptr, &m_swapchain_image_index);
@@ -100,6 +97,11 @@ bool Surface::prepare(u64 time_out) {
         return false;
     } else {
         VK_CHECK(result);
+    }
+
+    auto& wait_semaphore    = m_wait_semaphores[m_swapchain_image_index];
+    if(wait_semaphore == nullptr){
+        wait_semaphore    = std::make_unique<Semaphore>();
     }
 
     m_current_prepare_semaphore = prepare_semaphore.get();
