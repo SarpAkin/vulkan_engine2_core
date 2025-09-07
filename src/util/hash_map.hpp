@@ -297,7 +297,6 @@ private: // modifier implement
         return _insert(x.first, V(x.second), allow_override);
     }
 
-
     std::pair<iterator, bool> _insert(K&& key, V&& value, bool allow_override) {
         if (m_index_table_size == 0) _reserve(initial_capacity);
 
@@ -364,10 +363,10 @@ private: // modifier implement
         using Ref = decltype(*b);
 
         for (auto it = b; it != e; it++) {
-            if constexpr(std::is_rvalue_reference_v<Ref>){
+            if constexpr (std::is_rvalue_reference_v<Ref>) {
                 _insert_value_type(std::move(*it), allow_override);
-            }else{
-                _insert_value_type(*it,allow_override);
+            } else {
+                _insert_value_type(*it, allow_override);
             }
         }
     }
@@ -506,7 +505,7 @@ private: // util
         size_type start = hash % m_index_table_size;
         size_type index = start;
 
-        //probe as much as the index table 
+        // probe as much as the index table
         for (size_type i = 0; i < m_index_table_size; i++, index = (start + i) % m_index_table_size) {
 
             // index of its key & value
@@ -591,6 +590,8 @@ private: // util
 
     template <bool is_empty = false>
     void _assign(DenseHashMap&& other) {
+        if (&other == this) return;
+
         if constexpr (!is_empty) {
             cleanup();
         }

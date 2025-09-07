@@ -5,6 +5,7 @@
 #include <chrono>        // IWYU pragma: export
 #include <deque>         // IWYU pragma: export
 #include <exception>     // IWYU pragma: export
+#include <filesystem>    // IWYU pragma: export
 #include <format>        // IWYU pragma: export
 #include <functional>    // IWYU pragma: export
 #include <iostream>      // IWYU pragma: export
@@ -31,4 +32,4 @@
 #include <vulkan/vulkan.h>   // IWYU pragma: export
 #include <vulkan/vulkan.hpp> // IWYU pragma: export
 
-#include <vk_mem_alloc.h> // IWYU pragma: export 
+#include <vk_mem_alloc.h> // IWYU pragma: export
