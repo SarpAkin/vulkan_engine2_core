@@ -13,6 +13,7 @@
 
 #include "include_resolver/iinclude_resolver.hpp"
 #include "include_resolver/relative_include_resolver.hpp"
+#include "include_resolver/library_include_resolver.hpp"
 
 namespace vke {
 
@@ -150,4 +151,8 @@ ShaderCompiler::ShaderCompiler() {
 }
 
 ShaderCompiler::~ShaderCompiler() {}
+
+void ShaderCompiler::add_library_include_dir(std::string_view dir) {
+    m_include_resolver.push_back(std::make_shared<LibraryIncludeResolver>(dir));
+}
 } // namespace vke
