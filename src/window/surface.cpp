@@ -18,7 +18,7 @@ void Surface::init_swapchain() {
         vkb::SwapchainBuilder(vke::VulkanContext::get_context()->get_physical_device(), device(), m_surface)
             .use_default_format_selection()
             // use vsync present mode
-            .set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR)
+            .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
             .set_desired_extent(m_window->width(), m_window->height())
             .set_old_swapchain(m_swapchain)
             .build()
