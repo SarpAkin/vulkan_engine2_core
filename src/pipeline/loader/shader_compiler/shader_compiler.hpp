@@ -5,18 +5,31 @@
 
 #include <vector>
 
-#include "pipeline_file.hpp"
+#include "../pipeline_file.hpp"
 
+namespace vke {
 
-namespace vke
-{
-    
-
-struct CompiledShader{
+struct CompiledShader {
 public:
     std::vector<u32> spv;
     VkShaderStageFlagBits stage;
 };
 
-std::vector<CompiledShader> compile_shaders(PipelineDescription* description);
-}
+class IGlslIncludeResolver;
+
+class ShaderCompiler {
+public:
+    ShaderCompiler();
+    ~ShaderCompiler();
+
+    std::span<const std::shared_ptr<IGlslIncludeResolver>> get_includers() const { return m_include_resolver; }
+    std::vector<CompiledShader> compile_shaders(PipelineDescription* description);
+
+private:
+    CompiledShader compile_glsl(const std::string& file_path, const std::unordered_map<std::string, std::string>& flags);
+
+private:
+    std::vector<std::shared_ptr<IGlslIncludeResolver>> m_include_resolver;
+};
+
+} // namespace vke

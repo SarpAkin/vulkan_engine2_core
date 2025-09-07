@@ -3,7 +3,7 @@
 #include "../../builders/pipeline_builder.hpp"
 
 #include "pipeline_file.hpp"
-#include "shader_compiler.hpp"
+#include "shader_compiler/shader_compiler.hpp"
 
 #include "pipeline_file.hpp"
 #include "pipeline_globals_provider.hpp"
@@ -57,9 +57,9 @@ void DebugPipelineLoader::load_pipeline_file(const char* filename) {
         pipeline.file_path = filename;
 
         m_pipelines_descriptions[name] = std::make_unique<PipelineDescription>(std::move(pipeline));
-    }
+    } 
 
-    LOG_INFO("loaded pipeline file %s with %ld pipelines", filename, pipeline_file.pipelines.size());
+    // LOG_INFO("loaded pipeline file %s with %ld pipelines", filename, pipeline_file.pipelines.size());
 }
 
 static VkPipelineBindPoint determine_pipeline_type(std::span<const CompiledShader> compiled_shaders) {
@@ -71,7 +71,7 @@ static VkPipelineBindPoint determine_pipeline_type(std::span<const CompiledShade
 }
 
 std::unique_ptr<IPipeline> DebugPipelineLoader::load_pipeline(PipelineDescription* description) {
-    auto compiled_shaders = compile_shaders(description);
+    auto compiled_shaders = m_globals_provider->shader_compiler->compile_shaders(description);
 
     auto pipeline_type = determine_pipeline_type(compiled_shaders);
 

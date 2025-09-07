@@ -1,6 +1,7 @@
 #include "pipeline_globals_provider.hpp"
 
 #include "../../builders/pipeline_builder.hpp"
+#include "shader_compiler/shader_compiler.hpp"
 
 #include "pipeline_file.hpp"
 
@@ -38,4 +39,9 @@ void PipelineGlobalsProvider::set_globals(class PipelineBuilderBase& builder, cl
     
 }
 
+PipelineGlobalsProvider::PipelineGlobalsProvider() {
+    shader_compiler = std::make_unique<ShaderCompiler>();
+}
+
+PipelineGlobalsProvider::~PipelineGlobalsProvider() {}
 } // namespace vke
