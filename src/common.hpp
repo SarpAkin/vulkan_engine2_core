@@ -17,3 +17,19 @@ typedef int16_t i16;
 typedef int8_t i8;
 
 typedef size_t usize;
+
+namespace std {
+namespace filesystem {
+
+}
+
+namespace ranges {
+namespace views {
+}
+} // namespace ranges
+} // namespace std
+
+namespace vke {
+namespace fs    = std::filesystem;
+namespace views = std::ranges::views;
+} // namespace vke
