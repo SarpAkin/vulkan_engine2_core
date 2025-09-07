@@ -5,7 +5,6 @@
 
 #include <vector>
 
-#include "../pipeline_file.hpp"
 
 namespace vke {
 
@@ -16,6 +15,7 @@ public:
 };
 
 class IGlslIncludeResolver;
+class PipelineDescription;
 
 class ShaderCompiler {
 public:

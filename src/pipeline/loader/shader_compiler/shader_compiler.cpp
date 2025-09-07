@@ -14,6 +14,7 @@
 #include "include_resolver/iinclude_resolver.hpp"
 #include "include_resolver/relative_include_resolver.hpp"
 #include "include_resolver/library_include_resolver.hpp"
+#include "../pipeline_file.hpp"
 
 namespace vke {
 
