@@ -1,5 +1,6 @@
 #include "buffer.hpp"
 
+#include "util/util.hpp"
 #include "vkutil.hpp"
 #include "vulkan_context.hpp"
 
@@ -11,6 +12,8 @@
 namespace vke {
 
 Buffer::Buffer(VkBufferUsageFlags usage, usize buffer_size, bool host_visible) {
+    if (buffer_size == 0) THROW_ERROR("can't create buffers with 0 size");
+
     m_buffer_byte_size = buffer_size;
 
     VkBufferCreateInfo create_info{
@@ -23,8 +26,6 @@ Buffer::Buffer(VkBufferUsageFlags usage, usize buffer_size, bool host_visible) {
         .flags = host_visible ? VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT : 0u,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-
-
 
     VK_CHECK(vmaCreateBuffer(get_context()->gpu_allocator(), &create_info, &alloc_info, &m_buffer, &m_allocation, nullptr));
     vmaSetAllocationName(get_context()->gpu_allocator(), m_allocation, "image");
@@ -49,7 +50,7 @@ BufferSpan IBufferSpan::subspan(usize _byte_offset, usize _byte_size) {
 
 VkDeviceSize IBufferSpan::device_address() const {
     auto& dt = vke::VulkanContext::get_context()->get_dispatch_table();
-    
+
     VkBufferDeviceAddressInfo info = {
         .sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
         .buffer = handle(),

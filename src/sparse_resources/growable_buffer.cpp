@@ -24,7 +24,7 @@ GrowableBuffer::GrowableBuffer(VkBufferUsageFlags usage, usize buffer_size, bool
 
     if (block_size == 0) {
         block_size = memory_requirements.alignment;
-        LOG_INFO("no block size specified. using %lu", block_size);
+        // LOG_INFO("no block size specified. using %lu", block_size);
     } else {
         block_size = round_up_to_multiple(block_size, memory_requirements.alignment);
     }
