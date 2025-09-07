@@ -17,7 +17,7 @@ public:
     ~DebugPipelineLoader();
 
     std::unique_ptr<IPipeline> load(const char* pipeline_name) override;
-    void set_pipeline_globals_provider(std::unique_ptr<class PipelineGlobalsProvider> globals_provider) override { m_globals_provider = std::move(globals_provider); }
+    void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override { m_globals_provider = std::move(globals_provider); }
     PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_globals_provider.get(); }
 
     const PipelineDescription* get_pipeline_description(const char* pipeline_name);
@@ -33,7 +33,7 @@ private:
 
     std::string m_pipeline_search_path;
 
-    std::unique_ptr<PipelineGlobalsProvider> m_globals_provider;
+    std::shared_ptr<PipelineGlobalsProvider> m_globals_provider;
 };
 
 } // namespace vke

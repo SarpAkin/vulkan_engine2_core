@@ -114,7 +114,7 @@ void ReloadableLoader::remove_watched_pipeline(ReloadablePipeline* pipeline) {
         info.pipelines.erase(std::remove(info.pipelines.begin(), info.pipelines.end(), pipeline), info.pipelines.end());
     }
 }
-void ReloadableLoader::set_pipeline_globals_provider(std::unique_ptr<class PipelineGlobalsProvider> globals_provider) {
+void ReloadableLoader::set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) {
     m_pipeline_loader->set_pipeline_globals_provider(std::move(globals_provider));
 }
 
