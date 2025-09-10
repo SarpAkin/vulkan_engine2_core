@@ -4,7 +4,8 @@
 
 namespace vke {
 std::optional<IGlslIncludeResolver::IncludeResolverReturn> LibraryIncludeResolver::resolve_include(ArenaAllocator* arena_alloc, const IncludeResolveParameters& parameters) {
-    if (!parameters.is_relative) return std::nullopt;
+    //we only accept includes from non relative
+    if (parameters.is_relative) return std::nullopt;
 
     auto path = m_base_path / parameters.requested_source;
 
