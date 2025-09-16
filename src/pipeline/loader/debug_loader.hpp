@@ -13,7 +13,7 @@ class PipelineGlobalsProvider;
 
 class DebugPipelineLoader final : public IPipelineLoader {
 public:
-    DebugPipelineLoader(const char* pipeline_search_path);
+    DebugPipelineLoader(const std::vector<std::string>& pipeline_search_path);
     ~DebugPipelineLoader();
 
     std::unique_ptr<IPipeline> load(const char* pipeline_name) override;
@@ -31,7 +31,7 @@ private:
 private:
     std::unordered_map<std::string, std::unique_ptr<PipelineDescription>> m_pipelines_descriptions;
 
-    std::string m_pipeline_search_path;
+    std::vector<std::string> m_pipeline_search_paths;
 
     std::shared_ptr<PipelineGlobalsProvider> m_globals_provider;
 };

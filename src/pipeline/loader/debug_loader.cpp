@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 
 #include <vke/util.hpp>
 
@@ -17,8 +18,8 @@ namespace vke {
 
 DebugPipelineLoader::~DebugPipelineLoader() {}
 
-DebugPipelineLoader::DebugPipelineLoader(const char* pipeline_search_path) {
-    m_pipeline_search_path = pipeline_search_path;
+DebugPipelineLoader::DebugPipelineLoader(const std::vector<std::string>& pipeline_search_path) {
+    m_pipeline_search_paths = pipeline_search_path;
 
     load_descriptions();
 }
@@ -33,15 +34,18 @@ std::unique_ptr<IPipeline> DebugPipelineLoader::load(const char* pipeline_name) 
 }
 
 void DebugPipelineLoader::load_descriptions() {
-    LOG_INFO("loading pipeline descriptions from %s", m_pipeline_search_path.c_str());
 
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(m_pipeline_search_path)) {
-        if (!(entry.is_regular_file() && entry.path().filename() == "pipelines.json")) continue;
+    for (const auto& root : m_pipeline_search_paths) {
+        LOG_INFO("loading pipeline descriptions from %s", root.c_str());
+        
+        for (const auto& entry : fs::recursive_directory_iterator(root)) {
+            if (!(entry.is_regular_file() && entry.path().filename() == "pipelines.json")) continue;
 
-        try {
-            load_pipeline_file(entry.path().c_str());
-        } catch (std::exception& e) {
-            LOG_ERROR("failed to load pipeline %s: %s", entry.path().c_str(), e.what());
+            try {
+                load_pipeline_file(entry.path().c_str());
+            } catch (std::exception& e) {
+                LOG_ERROR("failed to load pipeline %s: %s", entry.path().c_str(), e.what());
+            }
         }
     }
 }
@@ -57,7 +61,7 @@ void DebugPipelineLoader::load_pipeline_file(const char* filename) {
         pipeline.file_path = filename;
 
         m_pipelines_descriptions[name] = std::make_unique<PipelineDescription>(std::move(pipeline));
-    } 
+    }
 
     // LOG_INFO("loaded pipeline file %s with %ld pipelines", filename, pipeline_file.pipelines.size());
 }

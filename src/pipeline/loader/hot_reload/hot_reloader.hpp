@@ -21,7 +21,7 @@ class ReloadablePipeline;
 
 class ReloadableLoader : public IPipelineLoader {
 public:
-    ReloadableLoader(const char* pipeline_search_path);
+    ReloadableLoader(const std::vector<std::string>& pipeline_search_path);
     ~ReloadableLoader();
 
     std::unique_ptr<IPipeline> load(const char* pipeline_name) override;

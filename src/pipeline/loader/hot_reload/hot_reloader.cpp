@@ -12,7 +12,7 @@
 
 namespace vke {
 
-ReloadableLoader::ReloadableLoader(const char* pipeline_search_path) : IPipelineLoader() {
+ReloadableLoader::ReloadableLoader(const std::vector<std::string>& pipeline_search_path) : IPipelineLoader() {
     m_pipeline_loader = std::make_unique<DebugPipelineLoader>(pipeline_search_path);
 
     m_running = true;
