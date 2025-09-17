@@ -11,10 +11,10 @@
 
 #include "shaderc_util.hpp"
 
-#include "include_resolver/iinclude_resolver.hpp"
-#include "include_resolver/relative_include_resolver.hpp"
-#include "include_resolver/library_include_resolver.hpp"
 #include "../pipeline_file.hpp"
+#include "include_resolver/iinclude_resolver.hpp"
+#include "include_resolver/library_include_resolver.hpp"
+#include "include_resolver/relative_include_resolver.hpp"
 
 namespace vke {
 
@@ -135,16 +135,10 @@ CompiledShader ShaderCompiler::compile_glsl(const std::string& file_path, const 
     };
 }
 
-std::vector<CompiledShader> ShaderCompiler::compile_shaders(PipelineDescription* description) {
-    std::vector<CompiledShader> compiled_shaders;
-
-    auto base_path = fs::path(description->file_path).parent_path();
-
-    for (auto& shader : description->shader_files) {
-        compiled_shaders.push_back(compile_glsl(base_path / shader, description->compiler_definitions));
-    }
-
-    return compiled_shaders;
+std::vector<CompiledShader> ShaderCompiler::compile_shaders(const PipelineDescription* description) {
+    return vke::map_vec(description->shader_file_absolute_paths, [&](const std::string& p) {
+        return compile_glsl(p, description->compiler_definitions);
+    });
 }
 
 ShaderCompiler::ShaderCompiler() {
@@ -156,4 +150,5 @@ ShaderCompiler::~ShaderCompiler() {}
 void ShaderCompiler::add_system_include_dir(std::string_view dir) {
     m_include_resolver.push_back(std::make_shared<LibraryIncludeResolver>(dir));
 }
+
 } // namespace vke

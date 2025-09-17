@@ -6,11 +6,11 @@
 
 namespace vke {
 
-std::unique_ptr<IPipelineLoader> IPipelineLoader::make_debug_loader(const std::vector<std::string>& pipeline_search_path, bool reloadable) {
-    if (reloadable) {
-        return std::make_unique<ReloadableLoader>(pipeline_search_path);
+std::unique_ptr<IPipelineLoader> IPipelineLoader::make_debug_loader(const DebugLoaderArguments& args) {
+    if (args.reloadable) {
+        return std::make_unique<ReloadableLoader>(args);
     } else {
-        return std::make_unique<DebugPipelineLoader>(pipeline_search_path);
+        return std::make_unique<DebugPipelineLoader>(args);
     }
 }
 

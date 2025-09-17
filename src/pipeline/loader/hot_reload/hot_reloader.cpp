@@ -12,8 +12,8 @@
 
 namespace vke {
 
-ReloadableLoader::ReloadableLoader(const std::vector<std::string>& pipeline_search_path) : IPipelineLoader() {
-    m_pipeline_loader = std::make_unique<DebugPipelineLoader>(pipeline_search_path);
+ReloadableLoader::ReloadableLoader(const DebugLoaderArguments& args) : IPipelineLoader() {
+    m_pipeline_loader = std::make_unique<DebugPipelineLoader>(args);
 
     m_running = true;
 
@@ -35,18 +35,14 @@ std::unique_ptr<IPipeline> ReloadableLoader::load(const char* pipeline_name) {
 
     fs::path base_path = fs::path(description->file_path).parent_path();
 
-    reloadable_pipeline->shader_files = vke::map_vec(description->shader_files, [&](const std::string& s) {
-        return (base_path / s).string();
-    });
+    reloadable_pipeline->shader_files = description->shader_file_absolute_paths;
 
     std::lock_guard<std::mutex> lock(m_lock);
     m_reload_descriptions[reloadable_pipeline.get()] = {pipeline_name};
 
     for (auto& file : reloadable_pipeline->shader_files) {
         if (!m_watched_files.contains(file)) {
-            m_watched_files.insert({file, FileWatchInfo{
-                                              .last_modification_time = fs::last_write_time(file),
-                                          }});
+            m_watched_files.insert(std::pair(file, FileWatchInfo{.last_modification_time = fs::last_write_time(file)}));
         }
 
         m_watched_files[file].pipelines.push_back(reloadable_pipeline.get());
@@ -63,7 +59,9 @@ void ReloadableLoader::worker_function() {
         pipelines_to_reload.clear();
 
         find_pipelines_to_reload(pipelines_to_reload);
-
+        //!!!!! race condition bug here
+        // if reloadable pipelines gets destroyed here reload pipeline might still try to access it causing UB
+        // this requires a fix
         for (auto& [pipeline, description] : pipelines_to_reload) {
             reload_pipeline(pipeline, description);
         }

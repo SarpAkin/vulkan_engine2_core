@@ -3,11 +3,11 @@
 #include <vke/fwd.hpp>
 #include <vulkan/vulkan.h>
 
-#include <vector>
 #include <memory>
 #include <span>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace vke {
 
@@ -26,8 +26,9 @@ public:
     ~ShaderCompiler();
 
     std::span<const std::shared_ptr<IGlslIncludeResolver>> get_includers() const { return m_include_resolver; }
-    std::vector<CompiledShader> compile_shaders(PipelineDescription* description);
+    std::vector<CompiledShader> compile_shaders(const PipelineDescription* description);
     void add_system_include_dir(std::string_view dir);
+    std::vector<std::string> get_includes_of_shader(const std::string& path) { return {}; }
 
 private:
     CompiledShader compile_glsl(const std::string& file_path, const std::unordered_map<std::string, std::string>& flags);

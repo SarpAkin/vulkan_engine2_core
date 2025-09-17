@@ -34,6 +34,7 @@ public:
 
     // not serialized
     std::string file_path;
+    std::vector<std::string> shader_file_absolute_paths;
 
     void load(const json& json);
 };
