@@ -58,6 +58,8 @@ void PipelineBuilderBase::add_shader_stage(const u32* spirv_code, usize spirv_le
         .module     = module,
         .file_path  = std::string(filename),
     });
+
+    m_shader_stages |= stage;
 }
 
 void GPipelineBuilder::set_topology(VkPrimitiveTopology topology) {
@@ -180,6 +182,10 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
     };
 
+    VkPipelineTessellationStateCreateInfo tess_ci{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
+    };
+
     VkGraphicsPipelineCreateInfo pipeline_info = {
         .sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .stageCount          = static_cast<uint32_t>(shader_stages.size()),
@@ -209,6 +215,15 @@ std::unique_ptr<Pipeline> GPipelineBuilder::build() {
         pipeline_info.pNext      = &rendering_create_info;
         pipeline_info.renderPass = VK_NULL_HANDLE;
         pipeline_info.subpass    = 0;
+    }
+
+    if (m_shader_stages & VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT) {
+        assert(m_shader_stages & VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT && "tess control needs tess evaluation");
+        tess_ci.patchControlPoints = m_reflection->determine_tesselation_path_control_points();
+
+        m_input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+
+        pipeline_info.pTessellationState = &tess_ci;
     }
 
     if (is_mesh_shader) {
