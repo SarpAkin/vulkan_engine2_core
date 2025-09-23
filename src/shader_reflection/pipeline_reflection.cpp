@@ -11,7 +11,27 @@
 // #include "buffer_reflection.hpp"
 #include "spv_reflect_util.hpp"
 
+#include "spirv_reflect.h"
+
 namespace vke {
+
+static bool check_for_discard(std::span<const u32> spriv_code) {
+    for (int i = 5; i < spriv_code.size();) {
+        u32 spv_word = spriv_code[i];
+        u32 op       = spv_word & 0xFFFF;
+        u32 wc       = spv_word >> 16;
+        // check for invalid word count
+        if (wc == 0) throw std::runtime_error("invalid spriv core");
+
+        if (op == SpvOpKill) return true;
+        if (op == SpvOpTerminateInvocation) return true;
+        if (op == SpvOpDemoteToHelperInvocation) return true;
+
+        i += wc;
+    }
+
+    return false;
+}
 
 VkShaderStageFlagBits PipelineReflection::add_shader_stage(std::span<const u32> _spirv) {
     auto spirv = m_alloc.create_copy(_spirv);
@@ -27,6 +47,11 @@ VkShaderStageFlagBits PipelineReflection::add_shader_stage(std::span<const u32> 
         .stage  = static_cast<VkShaderStageFlagBits>(stage),
         .module = module,
     });
+
+    //check for alpha discard
+    if (stage == VK_SHADER_STAGE_FRAGMENT_BIT) {
+        m_has_discard = check_for_discard(_spirv);
+    }
 
     return static_cast<VkShaderStageFlagBits>(stage);
 }

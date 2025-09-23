@@ -30,6 +30,7 @@ public:
     // std::unique_ptr<BufferReflection> reflect_buffer(u32 set, u32 binding) const;
 
     int determine_tesselation_path_control_points() const;
+    bool has_fragment_discard() const{return m_has_discard;}
 
 private:
     void check_for_autopadding(SpvReflectDescriptorBinding* binding) const;
@@ -54,5 +55,7 @@ private:
     ArenaAllocator m_alloc;
 
     std::vector<ShaderStage> m_shaders;
+
+    bool m_has_discard = false;
 };
 } // namespace vke
