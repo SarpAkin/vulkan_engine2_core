@@ -21,12 +21,12 @@ class ReloadablePipeline;
 
 class ReloadableLoader : public IPipelineLoader {
 public:
-    ReloadableLoader(const char* pipeline_search_path);
+    ReloadableLoader(const DebugLoaderArguments& args);
     ~ReloadableLoader();
 
     std::unique_ptr<IPipeline> load(const char* pipeline_name) override;
     PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_pipeline_loader->get_pipeline_globals_provider(); }
-    void set_pipeline_globals_provider(std::unique_ptr<PipelineGlobalsProvider> globals_provider) override;
+    void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override;
 
     void remove_watched_pipeline(ReloadablePipeline* pipeline);
 

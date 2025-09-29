@@ -9,9 +9,29 @@
 
 #include "../util/util.hpp"
 // #include "buffer_reflection.hpp"
+#include "../pipeline/loader/shader_compiler/spv_utils.hpp"
 #include "spv_reflect_util.hpp"
 
+#include "spirv_reflect.h"
+
 namespace vke {
+
+using namespace spirv_util;
+
+static bool check_for_discard(std::span<const u32> spriv_code) {
+    bool has_discard = false;
+
+    spirv_util::iterate_spv_words(spriv_code, [&](u32 op, u32 wc, std::span<const u32> words) {
+        if (op == SpvOpKill || op == SpvOpTerminateInvocation || op == SpvOpDemoteToHelperInvocation) {
+            has_discard = true;
+            return false;
+        }
+
+        return true;
+    });
+
+    return has_discard;
+}
 
 VkShaderStageFlagBits PipelineReflection::add_shader_stage(std::span<const u32> _spirv) {
     auto spirv = m_alloc.create_copy(_spirv);
@@ -28,6 +48,11 @@ VkShaderStageFlagBits PipelineReflection::add_shader_stage(std::span<const u32> 
         .module = module,
     });
 
+    // check for alpha discard
+    if (stage == VK_SHADER_STAGE_FRAGMENT_BIT) {
+        m_has_discard = check_for_discard(_spirv);
+    }
+
     return static_cast<VkShaderStageFlagBits>(stage);
 }
 
@@ -41,7 +66,7 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
         std::span<BindingInfo> bindings;
     } set_infos[4] = {};
 
-    u32 push_size = UINT32_MAX;
+    u32 push_size                 = UINT32_MAX;
     VkShaderStageFlags push_stage = 0;
 
     for (auto& shader : m_shaders) {
@@ -55,7 +80,7 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
             }
 
             for (auto* binding : std::span(set.bindings, set.binding_count)) {
-                //check_for_autopadding(binding);
+                // check_for_autopadding(binding);
 
                 auto& reflection_binding = set.bindings[binding->binding];
 
@@ -68,20 +93,20 @@ PipelineReflection::LayoutBuild PipelineReflection::build_pipeline_layout() cons
         }
 
         if (push_size == UINT32_MAX && module->push_constant_block_count > 0) {
-            push_size  = module->push_constant_blocks[0].size;
+            push_size = module->push_constant_blocks[0].size;
             push_stage |= shader.stage;
         }
     }
 
     std::vector<VkDescriptorSetLayout> dset_layouts;
 
-    for (int i = 0;i < std::span(set_infos).size();i++) {
+    for (int i = 0; i < std::span(set_infos).size(); i++) {
         auto& set_info = set_infos[i];
-        if(auto layout = get_set_layout(i);layout!= nullptr){
+        if (auto layout = get_set_layout(i); layout != nullptr) {
             dset_layouts.push_back(layout);
             continue;
         }
-        
+
         if (set_info.bindings.empty()) break;
 
         DescriptorSetLayoutBuilder builder;
@@ -149,34 +174,33 @@ std::vector<std::pair<SpvReflectDescriptorBinding*, const PipelineReflection::Sh
     return found_bindings;
 }
 
-void PipelineReflection::check_for_autopadding(SpvReflectDescriptorBinding* binding) const{
-    if(binding->descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER) return;
+void PipelineReflection::check_for_autopadding(SpvReflectDescriptorBinding* binding) const {
+    if (binding->descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER) return;
 
     check_for_autopadding_in_block(&binding->block);
 }
 
-
 void PipelineReflection::check_for_autopadding_in_block(SpvReflectBlockVariable* block) const {
-    if(block->size != block->padded_size) {
-        LOG_WARNING("block %s has padding\n",block->name);
+    if (block->size != block->padded_size) {
+        LOG_WARNING("block %s has padding\n", block->name);
     }
 
     uint total_bytes = 0;
 
-    for(auto& member : std::span(block->members, block->member_count)) {
+    for (auto& member : std::span(block->members, block->member_count)) {
         total_bytes += member.size;
         check_for_autopadding_in_block(&member);
     }
 
-    if(total_bytes != block->padded_size) {
-        LOG_WARNING("block %s has padding %u vs %u\n",block->name,total_bytes,block->padded_size);
+    if (total_bytes != block->padded_size) {
+        LOG_WARNING("block %s has padding %u vs %u\n", block->name, total_bytes, block->padded_size);
     }
 }
 
 void PipelineReflection::set_descriptor_layout(int set_index, VkDescriptorSetLayout layout) {
     if (set_index < 0 || set_index > 32) THROW_ERROR("invalid set index %d", set_index);
 
-    if(m_layouts.size() <= set_index) m_layouts.resize(set_index + 1);
+    if (m_layouts.size() <= set_index) m_layouts.resize(set_index + 1);
 
     m_layouts[set_index] = layout;
 }
@@ -185,4 +209,25 @@ VkDescriptorSetLayout PipelineReflection::get_set_layout(int index) const {
 
     return m_layouts[index];
 }
+
+int PipelineReflection::determine_tesselation_path_control_points() const {
+    const ShaderStage* shader = find_shader_stage(VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+    if (shader == nullptr) return -1;
+
+    SpvReflectShaderModule* shader_module = shader->module;
+
+    auto entry_point = spv_find_entry_point(shader_module, "main");
+    if (entry_point == nullptr) return -1;
+
+    return entry_point->output_vertices;
+}
+
+const PipelineReflection::ShaderStage* PipelineReflection::find_shader_stage(VkShaderStageFlagBits stage) const {
+    for (auto& shader : m_shaders) {
+        if (shader.stage == stage) return &shader;
+    }
+
+    return nullptr;
+}
+
 } // namespace vke

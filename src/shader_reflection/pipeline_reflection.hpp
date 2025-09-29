@@ -12,7 +12,6 @@ struct SpvReflectBlockVariable;
 
 namespace vke {
 
-
 class PipelineReflection {
 public:
     struct LayoutBuild {
@@ -30,8 +29,11 @@ public:
     LayoutBuild build_pipeline_layout() const;
     // std::unique_ptr<BufferReflection> reflect_buffer(u32 set, u32 binding) const;
 
+    int determine_tesselation_path_control_points() const;
+    bool has_fragment_discard() const{return m_has_discard;}
+
 private:
-    void check_for_autopadding(SpvReflectDescriptorBinding* binding)const;
+    void check_for_autopadding(SpvReflectDescriptorBinding* binding) const;
     void check_for_autopadding_in_block(SpvReflectBlockVariable* block) const;
 
     VkDescriptorSetLayout get_set_layout(int index) const;
@@ -43,6 +45,9 @@ private:
         SpvReflectShaderModule* module;
     };
 
+private:
+    const ShaderStage* find_shader_stage(VkShaderStageFlagBits stage) const;
+
     std::vector<VkDescriptorSetLayout> m_layouts;
 
     std::vector<std::pair<SpvReflectDescriptorBinding*, const ShaderStage*>> find_bindings(u32 set, u32 binding) const;
@@ -50,5 +55,7 @@ private:
     ArenaAllocator m_alloc;
 
     std::vector<ShaderStage> m_shaders;
+
+    bool m_has_discard = false;
 };
 } // namespace vke

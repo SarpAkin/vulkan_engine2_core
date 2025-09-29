@@ -44,16 +44,15 @@ public:
         return to_cstring(result);
     }
 };
-} // namespace vke
 
-//fprintf(stderr, "[SPV Reflection Error]: %d\n", static_cast<u32>(result));
+// fprintf(stderr, "[SPV Reflection Error]: %d\n", static_cast<u32>(result));
 
-#define SPV_CHECK(x)                                                                   \
-    {                                                                                  \
-        SpvReflectResult result = x;                                                   \
-        if (result != SPV_REFLECT_RESULT_SUCCESS) {                                    \
-            throw vke::SpvReflectionError(result);                                     \
-        }                                                                              \
+#define SPV_CHECK(x)                                \
+    {                                               \
+        SpvReflectResult result = x;                \
+        if (result != SPV_REFLECT_RESULT_SUCCESS) { \
+            throw vke::SpvReflectionError(result);  \
+        }                                           \
     }
 
 inline VkShaderStageFlags convert_to_vk(SpvReflectShaderStageFlagBits stage) {
@@ -97,3 +96,23 @@ inline VkDescriptorType convert_to_vk(SpvReflectDescriptorType type) {
     assert(0);
     return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
+
+inline SpvReflectInterfaceVariable* spv_find_interface_variable(const SpvReflectShaderModule* shader_module, const char* name) {
+    for (int i = 0; i < shader_module->interface_variable_count; i++) {
+        SpvReflectInterfaceVariable* interface_variable = &shader_module->interface_variables[i];
+        if (strcmp(name, interface_variable->name) == 0) return interface_variable;
+    }
+
+    return nullptr;
+}
+
+inline SpvReflectEntryPoint* spv_find_entry_point(const SpvReflectShaderModule* shader_module, const char* name) {
+    for (int i = 0; i < shader_module->entry_point_count; i++) {
+        auto* entry_point = &shader_module->entry_points[i];
+        if (strcmp(name, entry_point->name) == 0) return entry_point;
+    }
+
+    return nullptr;
+}
+
+} // namespace vke
