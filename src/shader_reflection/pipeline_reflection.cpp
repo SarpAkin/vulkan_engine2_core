@@ -216,10 +216,10 @@ int PipelineReflection::determine_tesselation_path_control_points() const {
 
     SpvReflectShaderModule* shader_module = shader->module;
 
-    auto interface_variable = spv_find_interface_variable(shader_module,"gl_out");
-    if (interface_variable == nullptr) return -1;
+    auto entry_point = spv_find_entry_point(shader_module, "main");
+    if (entry_point == nullptr) return -1;
 
-    return interface_variable->array.dims[0];
+    return entry_point->output_vertices;
 }
 
 const PipelineReflection::ShaderStage* PipelineReflection::find_shader_stage(VkShaderStageFlagBits stage) const {
@@ -229,4 +229,5 @@ const PipelineReflection::ShaderStage* PipelineReflection::find_shader_stage(VkS
 
     return nullptr;
 }
+
 } // namespace vke
