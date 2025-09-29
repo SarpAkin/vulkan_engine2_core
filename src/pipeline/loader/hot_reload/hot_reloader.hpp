@@ -2,11 +2,11 @@
 
 #include <vke/fwd.hpp>
 
+#include <atomic>
+#include <mutex>
+#include <thread>
 #include <unordered_map>
 #include <vector>
-#include <mutex>
-#include <atomic>
-#include <thread>
 
 #include <filesystem>
 
@@ -27,10 +27,11 @@ public:
     std::unique_ptr<IPipeline> load(const char* pipeline_name) override;
     PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_pipeline_loader->get_pipeline_globals_provider(); }
     void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override;
+    const PipelineDescription* get_pipeline_description(const char* pipeline_name) override { return m_pipeline_loader->get_pipeline_description(pipeline_name); }
 
     void remove_watched_pipeline(ReloadablePipeline* pipeline);
 
-    //stops watching
+    // stops watching
     void stop();
 
 private:
@@ -45,7 +46,7 @@ private:
         std::string pipeline_name;
     };
 
-    struct FileWatchInfo{
+    struct FileWatchInfo {
         std::vector<ReloadablePipeline*> pipelines;
         fs::file_time_type last_modification_time;
     };

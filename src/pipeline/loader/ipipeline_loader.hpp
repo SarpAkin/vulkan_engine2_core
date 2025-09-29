@@ -20,6 +20,7 @@ public:
     virtual std::unique_ptr<IPipeline> load(const char* pipeline_name)                                    = 0;
     virtual void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) = 0;
     virtual PipelineGlobalsProvider* get_pipeline_globals_provider()                                      = 0;
+    virtual const PipelineDescription* get_pipeline_description(const char* pipeline_name)                = 0;
 
     static std::unique_ptr<IPipelineLoader> make_debug_loader(const DebugLoaderArguments& args);
 };

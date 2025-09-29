@@ -20,7 +20,7 @@ public:
     void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override { m_globals_provider = std::move(globals_provider); }
     PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_globals_provider.get(); }
 
-    const PipelineDescription* get_pipeline_description(const char* pipeline_name);
+    const PipelineDescription* get_pipeline_description(const char* pipeline_name)override;
 
 private:
     void load_descriptions();
