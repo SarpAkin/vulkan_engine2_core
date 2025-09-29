@@ -8,7 +8,7 @@
 #include "buffer.hpp"
 #include "fwd.hpp"
 #include "isubpass.hpp"
-#include "pipeline.hpp"
+#include "pipeline/ipipeline.hpp"
 #include "renderpass/renderpass.hpp"
 #include "util/function_timer.hpp"
 #include "util/util.hpp"

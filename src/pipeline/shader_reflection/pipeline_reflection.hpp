@@ -3,8 +3,9 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
-#include "../fwd.hpp"
-#include "../util/arena_alloc.hpp"
+#include <vke/fwd.hpp>
+
+#include "../../util/arena_alloc.hpp"
 
 struct SpvReflectShaderModule;
 struct SpvReflectDescriptorBinding;

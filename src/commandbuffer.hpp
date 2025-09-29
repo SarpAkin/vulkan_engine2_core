@@ -6,8 +6,8 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
-#include "common.hpp"
-#include "fwd.hpp"
+#include <vke/fwd.hpp>
+
 #include "vk_resource.hpp"
 
 namespace vke {

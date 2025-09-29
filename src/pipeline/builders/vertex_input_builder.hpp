@@ -3,7 +3,7 @@
 #include <cassert>
 #include <vector>
 
-#include "../common.hpp"
+#include <vke/fwd.hpp>
 
 #include <vulkan/vulkan_core.h>
 

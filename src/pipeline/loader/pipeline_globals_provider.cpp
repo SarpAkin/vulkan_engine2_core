@@ -1,9 +1,11 @@
 #include "pipeline_globals_provider.hpp"
 
-#include "../../builders/pipeline_builder.hpp"
+#include "../builders/pipeline_builder.hpp"
 #include "shader_compiler/shader_compiler.hpp"
 
 #include "pipeline_file.hpp"
+
+#include "../../isubpass.hpp" // IWYU pragma: KEEP
 
 #include <vke/util.hpp>
 

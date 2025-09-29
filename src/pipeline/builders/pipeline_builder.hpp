@@ -7,11 +7,10 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
-#include "../common.hpp"
-#include "../fwd.hpp"
-#include "../isubpass.hpp"
-#include "../pipeline.hpp"
-#include "../util/arena_alloc.hpp"
+#include <vke/fwd.hpp>
+
+#include "../../util/arena_alloc.hpp"
+#include "../../vk_resource.hpp"
 
 #include "pipeline_layout_builder.hpp"
 
