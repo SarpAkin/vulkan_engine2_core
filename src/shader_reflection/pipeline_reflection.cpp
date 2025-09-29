@@ -9,28 +9,28 @@
 
 #include "../util/util.hpp"
 // #include "buffer_reflection.hpp"
+#include "../pipeline/loader/shader_compiler/spv_utils.hpp"
 #include "spv_reflect_util.hpp"
 
 #include "spirv_reflect.h"
 
 namespace vke {
 
+using namespace spirv_util;
+
 static bool check_for_discard(std::span<const u32> spriv_code) {
-    for (int i = 5; i < spriv_code.size();) {
-        u32 spv_word = spriv_code[i];
-        u32 op       = spv_word & 0xFFFF;
-        u32 wc       = spv_word >> 16;
-        // check for invalid word count
-        if (wc == 0) throw std::runtime_error("invalid spriv core");
+    bool has_discard = false;
 
-        if (op == SpvOpKill) return true;
-        if (op == SpvOpTerminateInvocation) return true;
-        if (op == SpvOpDemoteToHelperInvocation) return true;
+    spirv_util::iterate_spv_words(spriv_code, [&](u32 op, u32 wc, std::span<const u32> words) {
+        if (op == SpvOpKill || op == SpvOpTerminateInvocation || op == SpvOpDemoteToHelperInvocation) {
+            has_discard = true;
+            return false;
+        }
 
-        i += wc;
-    }
+        return true;
+    });
 
-    return false;
+    return has_discard;
 }
 
 VkShaderStageFlagBits PipelineReflection::add_shader_stage(std::span<const u32> _spirv) {
@@ -48,7 +48,7 @@ VkShaderStageFlagBits PipelineReflection::add_shader_stage(std::span<const u32> 
         .module = module,
     });
 
-    //check for alpha discard
+    // check for alpha discard
     if (stage == VK_SHADER_STAGE_FRAGMENT_BIT) {
         m_has_discard = check_for_discard(_spirv);
     }
