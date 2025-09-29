@@ -106,4 +106,13 @@ inline SpvReflectInterfaceVariable* spv_find_interface_variable(const SpvReflect
     return nullptr;
 }
 
+inline SpvReflectEntryPoint* spv_find_entry_point(const SpvReflectShaderModule* shader_module, const char* name) {
+    for (int i = 0; i < shader_module->entry_point_count; i++) {
+        auto* entry_point = &shader_module->entry_points[i];
+        if (strcmp(name, entry_point->name) == 0) return entry_point;
+    }
+
+    return nullptr;
+}
+
 } // namespace vke
