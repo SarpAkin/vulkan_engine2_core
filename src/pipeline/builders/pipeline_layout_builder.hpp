@@ -3,7 +3,7 @@
 #include <vector>
 
 #include <vulkan/vulkan.h>
-#include "../common.hpp"
+#include <vke/fwd.hpp>
 
 namespace vke{
 

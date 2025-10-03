@@ -4,10 +4,11 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
-#include "common.hpp"
-#include "fwd.hpp"
-#include "pipeline/ipipeline.hpp"
-#include "vk_resource.hpp"
+#include "../common.hpp"
+#include "../fwd.hpp"
+#include "../vk_resource.hpp"
+
+#include "ipipeline.hpp"
 
 namespace vke {
 

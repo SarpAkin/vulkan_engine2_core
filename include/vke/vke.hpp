@@ -12,7 +12,7 @@
 #include "../../src/image.hpp"                            // IWYU pragma: export
 #include "../../src/image_view.hpp"                       // IWYU pragma: export
 #include "../../src/isubpass.hpp"                         // IWYU pragma: export
-#include "../../src/pipeline.hpp"                         // IWYU pragma: export
+#include "../../src/pipeline/pipeline.hpp"                // IWYU pragma: export
 #include "../../src/renderpass/renderpass.hpp"            // IWYU pragma: export
 #include "../../src/renderpass/renderpass_builder.hpp"    // IWYU pragma: export
 #include "../../src/semaphore.hpp"                        // IWYU pragma: export

@@ -1,12 +1,14 @@
 #include "debug_loader.hpp"
 
-#include "../../builders/pipeline_builder.hpp"
+#include "../builders/pipeline_builder.hpp"
 
 #include "pipeline_file.hpp"
 #include "shader_compiler/shader_compiler.hpp"
 
 #include "pipeline_file.hpp"
 #include "pipeline_globals_provider.hpp"
+
+#include "../pipeline.hpp"
 
 #include <filesystem>
 #include <fstream>

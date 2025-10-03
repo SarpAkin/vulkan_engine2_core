@@ -9,13 +9,17 @@
 
 #include <spirv_reflect.h>
 
-#include "../pipeline.hpp"
-#include "../shader_reflection/pipeline_reflection.hpp"
-#include "../vkutil.hpp"
 #include "vertex_input_builder.hpp"
 
-#include "../util/util.hpp"
-#include "../vulkan_context.hpp"
+#include "../pipeline.hpp"
+#include "../shader_reflection/pipeline_reflection.hpp"
+
+#include "../../vkutil.hpp"
+#include "../../pipeline/pipeline.hpp"
+#include "../../util/util.hpp"
+#include "../../vulkan_context.hpp"
+#include "../../isubpass.hpp"
+
 
 namespace vke {
 

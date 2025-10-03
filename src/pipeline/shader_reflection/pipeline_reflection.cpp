@@ -4,15 +4,16 @@
 
 #include <spirv_reflect.h>
 
-#include "../builders/descriptor_set_layout_builder.hpp"
+#include "../../builders/descriptor_set_layout_builder.hpp"
+
 #include "../builders/pipeline_layout_builder.hpp"
 
-#include "../util/util.hpp"
-// #include "buffer_reflection.hpp"
-#include "../pipeline/loader/shader_compiler/spv_utils.hpp"
+#include "../../util/util.hpp"
+#include "../loader/shader_compiler/spv_utils.hpp"
+
 #include "spv_reflect_util.hpp"
 
-#include "spirv_reflect.h"
+#include <spirv_reflect.h>
 
 namespace vke {
 

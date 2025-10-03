@@ -5,8 +5,7 @@
 #include <unordered_map>
 #include <vke/fwd.hpp>
 
-#include "../../builders/vertex_input_builder.hpp"
-#include "../../isubpass.hpp"
+#include "../builders/vertex_input_builder.hpp"
 
 namespace vke {
 
