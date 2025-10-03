@@ -76,5 +76,73 @@ void append_metadata(std::vector<u32>& spv, std::string_view key, std::span<cons
     spv[metadata_begin + 0] = SpvOpExtInst | (spv.size() - metadata_begin);
     spv[metadata_begin + 1] = (string_view_wc & 0xFFFF) | (data_wc << 16);
 }
+
+void spv_change_set_numbers(std::vector<u32>& spv, int target_set, int new_value) {
+    iterate_spv_words(spv, [&](u32 op, u32 wc, std::span<u32> words) {
+        if (op != SpvOpDecorate) return true;
+
+        // decorate
+        //  words
+        //  0        1               2
+        //  ID?      decoration_type value
+
+        // 0x22 means it is a set decoration
+        if (words[1] == 0x22 && words[2] == target_set) {
+            words[2] = new_value;
+        }
+
+        // words[1] == 0x21 for binding
+
+        return true;
+    });
+}
+
+std::unordered_set<u32> spv_find_set_numbers(std::span<const u32> spv) {
+    std::unordered_set<u32> numbers;
+
+    iterate_spv_words(spv, [&](u32 op, u32 wc, std::span<const u32> words) {
+        if (op != SpvOpDecorate) return true;
+
+        if (words[1] == 0x22) {
+            numbers.emplace(words[2]);
+        }
+
+        return true;
+    });
+
+    return numbers;
+}
+
+void spv_iterate_descriptor_bindings(std::span<u32> spv, std::function<void(u32& /*set*/, u32& /*binding*/)> f) {
+
+    u32 *set_data = nullptr, *binding_data = nullptr;
+    u32 id = 0xFFFF'FFFF;
+
+    iterate_spv_words(spv, [&](u32 op, u32 wc, std::span<u32> words) {
+        if (op != SpvOpDecorate) return true;
+
+        if (words[0] != id) {
+            set_data     = nullptr;
+            binding_data = nullptr;
+            id           = words[0];
+        }
+
+        //0x22 for descriptor sets, 0x21 for descriptor bindings
+        if (words[1] == 0x22) {
+            set_data = words.data();
+        } else if (words[1] == 0x21) {
+            binding_data = words.data();
+        }
+
+        // if we have bot call the function
+        if (set_data && binding_data) {
+            // function can change the values
+            f(set_data[2], binding_data[2]);
+        }
+
+        return true;
+    });
+}
+
 } // namespace spirv_util
 } // namespace vke
