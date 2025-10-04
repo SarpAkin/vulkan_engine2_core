@@ -31,6 +31,7 @@ public:
 
 private:
     void create_attachments();
+    void clear_sampled_attachments(CommandBuffer* cmd);
     void create_framebuffers();
     void destroy_framebuffers();
 
