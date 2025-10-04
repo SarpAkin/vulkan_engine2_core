@@ -55,20 +55,21 @@ void DebugPipelineLoader::load_descriptions() {
 }
 
 void DebugPipelineLoader::load_pipeline_file(const char* filename) {
-    PipelineFile pipeline_file;
+    auto pipeline_file = std::make_shared<PipelineFile>();
 
     auto is = std::ifstream(filename);
-    pipeline_file.load(json::parse(is));
+    pipeline_file->load(json::parse(is));
 
-    for (auto& pipeline : pipeline_file.pipelines) {
-        auto name          = pipeline.name; // pipeline is moved out so name becomes empty after the move
-        pipeline.file_path = filename;
-        process_description(&pipeline);
+    for (auto& pipeline : pipeline_file->pipelines) {
+        pipeline->file_path = filename;
+        process_description(pipeline.get());
 
-        m_pipelines_descriptions[name] = std::make_unique<PipelineDescription>(std::move(pipeline));
+        m_pipelines_descriptions[pipeline->name] = pipeline;
     }
 
-    // LOG_INFO("loaded pipeline file %s with %ld pipelines", filename, pipeline_file.pipelines.size());
+    m_pipeline_files.push_back(pipeline_file);
+
+    // LOG_INFO("loaded pipeline file %s with %ld pipelines", filename, pipeline_file->pipelines.size());
 }
 
 void DebugPipelineLoader::process_description(PipelineDescription* description) {
@@ -143,4 +144,6 @@ const PipelineDescription* DebugPipelineLoader::get_pipeline_description(const c
     }
     return it->second.get();
 }
+
+
 } // namespace vke

@@ -39,9 +39,18 @@ public:
     void load(const json& json);
 };
 
+class MultiPipelineDescription {
+public:
+    std::string name;
+    std::vector<std::string> pipelines;
+
+    void load(const json& json);
+};
+
 class PipelineFile {
 public:
-    std::vector<PipelineDescription> pipelines;
+    std::vector<std::shared_ptr<PipelineDescription>> pipelines;
+    std::vector<MultiPipelineDescription> multi_pipelines;
 
     void load(const json& json);
 };
