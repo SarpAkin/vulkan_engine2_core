@@ -7,6 +7,7 @@
 #include "../window/window.hpp"
 
 #include "../commandbuffer.hpp"
+#include "../vulkan_context.hpp"
 
 #include "renderpass_builder.hpp"
 
@@ -41,26 +42,108 @@ MultiPassRenderPass::MultiPassRenderPass(RenderPassBuilder* builder, u32 width, 
 }
 
 void MultiPassRenderPass::create_attachments() {
-    m_attachments = map_vec(m_attachment_infos, [this](const impl::AttachmentInfo& info) {
+
+    m_attachments = map_vec(m_attachment_infos, [&](const impl::AttachmentInfo& info) {
         if (info.is_surface_attachment) return Attachment{};
 
-        VkImageUsageFlags flags = is_depth_format(info.description.format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        bool depth_format = is_depth_format(info.description.format);
+
+        VkImageUsageFlags flags = depth_format ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         if (info.is_sampled) {
-            flags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+            flags |= VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         }
         if (info.is_input_attachment) {
             flags |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
         }
 
+        auto image = std::make_unique<vke::Image>(ImageArgs{
+            .format      = info.description.format,
+            .usage_flags = flags,
+            .width       = width(),
+            .height      = height(),
+            .layers      = m_attachment_layer_count,
+        });
+
         return Attachment{
-            .image = static_cast<std::unique_ptr<vke::IImageView>>(std::make_unique<vke::Image>(ImageArgs{
-                .format      = info.description.format,
-                .usage_flags = flags,
-                .width       = width(),
-                .height      = height(),
-                .layers      = m_attachment_layer_count,
-            })),
+            .image = static_cast<std::unique_ptr<vke::IImageView>>(std::move(image)),
         };
+    });
+
+    VulkanContext::get_context()->immediate_submit([&](vke::CommandBuffer& cmd) {
+        clear_sampled_attachments(&cmd);
+    });
+}
+
+void MultiPassRenderPass::clear_sampled_attachments(CommandBuffer* cmd) {
+    vke::SmallVec<VkImageMemoryBarrier, 6> barriers;
+
+    for (int i = 0; i < m_attachments.size(); i++) {
+        auto& info       = m_attachment_infos[i];
+        auto& attachment = m_attachments[i];
+        auto* image      = dynamic_cast<vke::Image*>(attachment.image.get());
+
+        if (!info.is_sampled) continue;
+
+        barriers.push_back({
+            .sType            = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .srcAccessMask    = VK_ACCESS_NONE,
+            .dstAccessMask    = VK_ACCESS_TRANSFER_WRITE_BIT,
+            .oldLayout        = VK_IMAGE_LAYOUT_UNDEFINED,
+            .newLayout        = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            .image            = image->handle(),
+            .subresourceRange = image->get_subresource_range(),
+        });
+    }
+
+    cmd->pipeline_barrier({
+        .src_stage_mask        = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        .dst_stage_mask        = VK_PIPELINE_STAGE_TRANSFER_BIT,
+        .image_memory_barriers = barriers,
+    });
+
+    barriers.clear();
+
+    for (int i = 0; i < m_attachments.size(); i++) {
+        auto& info       = m_attachment_infos[i];
+        auto& attachment = m_attachments[i];
+        auto* image      = dynamic_cast<vke::Image*>(attachment.image.get());
+
+        if (!info.is_sampled) continue;
+
+        bool depth_format = is_depth_format(info.description.format);
+
+        VkClearValue cvs[1];
+        if (depth_format) {
+            cvs[0] = VkClearValue{
+                .depthStencil = {1.0, 0},
+            };
+        } else {
+            cvs[0] = VkClearValue{
+                .color = {0, 0, 0, 0},
+            };
+        }
+
+        VkImageSubresourceRange sr[1] = {image->get_subresource_range()};
+
+        cmd->clear_image(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, cvs, sr);
+
+        VkAccessFlags mask = (depth_format ? (VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT) : (VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT));
+
+        barriers.push_back({
+            .sType            = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .srcAccessMask    = VK_ACCESS_TRANSFER_WRITE_BIT,
+            .dstAccessMask    = VK_ACCESS_MEMORY_READ_BIT,
+            .oldLayout        = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            .newLayout        = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            .image            = image->handle(),
+            .subresourceRange = sr[0],
+        });
+    }
+
+    cmd->pipeline_barrier({
+        .src_stage_mask        = VK_PIPELINE_STAGE_TRANSFER_BIT,
+        .dst_stage_mask        = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        .image_memory_barriers = barriers,
     });
 }
 
@@ -176,7 +259,7 @@ void MultiPassRenderPass::resize(CommandBuffer& cmd, u32 width, u32 height) {
     create_framebuffers();
 };
 
-void MultiPassRenderPass::set_active_frame_buffer_instance(u32 i)  {
+void MultiPassRenderPass::set_active_frame_buffer_instance(u32 i) {
     assert(i < m_frame_buffer_instance_count && "active instance must be in the range of frame buffer instance count!");
 
     m_active_frame_buffer_instance = i;
