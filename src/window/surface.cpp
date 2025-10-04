@@ -38,6 +38,8 @@ void Surface::init_swapchain() {
 
     m_prepare_semaphores.resize(m_swapchain_images.size());
     m_wait_semaphores.resize(m_swapchain_images.size());
+
+    m_swapchain_image_index = m_wait_semaphores.size() - 1;
 }
 
 Surface::~Surface() {
