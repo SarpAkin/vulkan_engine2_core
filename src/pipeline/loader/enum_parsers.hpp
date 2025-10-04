@@ -9,6 +9,8 @@ VkPolygonMode parse_polygon_mode(const std::string& str);
 VkPrimitiveTopology parse_topology_mode(const std::string& str);
 VkCullModeFlagBits parse_cull_mode(const std::string& str);
 VkCompareOp parse_depth_op(const std::string& str);
+VkShaderStageFlags parse_shader_stage(const std::string& str);
+VkDescriptorType parse_descriptor_type(const std::string& str);
 VkShaderStageFlagBits infer_shader_stage(const std::string& filepath);
 
 } // namespace vke
