@@ -47,10 +47,25 @@ public:
     void load(const json& json);
 };
 
+class DescriptorSetLayoutDescription {
+public:
+    struct BindingDescription {
+        VkShaderStageFlags stages;
+        VkDescriptorType type;
+        int count;
+    };
+
+    std::string name;
+    std::vector<BindingDescription> bindings;
+
+    void load(const json& json);
+};
+
 class PipelineFile {
 public:
     std::vector<std::shared_ptr<PipelineDescription>> pipelines;
     std::vector<MultiPipelineDescription> multi_pipelines;
+    std::vector<DescriptorSetLayoutDescription> descriptor_set_layouts;
 
     void load(const json& json);
 };

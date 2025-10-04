@@ -43,6 +43,13 @@ void PipelineFile::load(const json& json) {
         description.load(mpipeline);
         multi_pipelines.push_back(std::move(description));
     }
+
+    for (const auto& dsl_desc : json.value("set_layouts", json::array())) {
+        DescriptorSetLayoutDescription description;
+        description.load(dsl_desc);
+        descriptor_set_layouts.push_back(std::move(description));
+    }
+
 }
 
 void MultiPipelineDescription::load(const json& top) {
@@ -50,6 +57,23 @@ void MultiPipelineDescription::load(const json& top) {
 
     pipelines = map_vec(top.value("pipelines", json::array()), [&](const json& j) {
         return j.get<std::string>();
+    });
+}
+
+void DescriptorSetLayoutDescription::load(const json& top) {
+    name = top.value("name", std::string());
+
+    bindings = map_vec(top.value("bindings", json::array()), [&](const json& binding) {
+        VkShaderStageFlags stage_flags = 0;
+        for (auto& stages : binding.value("stages", json::array())) {
+            stage_flags |= parse_shader_stage(stages.get<std::string>());
+        }
+
+        return BindingDescription{
+            .stages = stage_flags,
+            .type   = parse_descriptor_type(binding.value("type", std::string())),
+            .count  = binding.value("count", 1),
+        };
     });
 }
 } // namespace vke

@@ -11,13 +11,15 @@ namespace vke {
 class PipelineDescription;
 class PipelineGlobalsProvider;
 
+class DescriptorSetLayoutDescription;
+
 class DebugPipelineLoader final : public IPipelineLoader {
 public:
     DebugPipelineLoader(const DebugLoaderArguments& args);
     ~DebugPipelineLoader();
 
     std::unique_ptr<IPipeline> load(const char* pipeline_name) override;
-    void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override { m_globals_provider = std::move(globals_provider); }
+    void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override;
     PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_globals_provider.get(); }
 
     const PipelineDescription* get_pipeline_description(const char* pipeline_name) override;
@@ -27,6 +29,8 @@ private:
     void load_descriptions();
     void load_pipeline_file(const char* file_name);
     void process_description(PipelineDescription* description);
+    void load_descriptor_set_layouts(const PipelineFile* pipeline_file);
+    void load_descriptor_set_layout(const DescriptorSetLayoutDescription* desc);
 
     std::unique_ptr<IPipeline> load_pipeline(const PipelineDescription* description);
     std::string resolve_shader_lib_path(const std::string& path);

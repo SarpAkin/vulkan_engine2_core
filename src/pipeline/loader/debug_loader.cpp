@@ -15,6 +15,7 @@
 #include <ranges>
 
 #include <vke/util.hpp>
+#include <vke/vke_builders.hpp>
 
 namespace vke {
 using std::string;
@@ -145,5 +146,26 @@ const PipelineDescription* DebugPipelineLoader::get_pipeline_description(const c
     return it->second.get();
 }
 
+void DebugPipelineLoader::load_descriptor_set_layouts(const PipelineFile* pipeline_file) {
+    for (auto& desc : pipeline_file->descriptor_set_layouts) {
+        load_descriptor_set_layout(&desc);
+    }
+}
 
+void DebugPipelineLoader::load_descriptor_set_layout(const DescriptorSetLayoutDescription* desc) {
+    vke::DescriptorSetLayoutBuilder builder;
+    for (auto& bindings : desc->bindings) {
+        builder.add_binding(bindings.type, bindings.stages, bindings.count);
+    }
+
+    m_globals_provider->set_layouts[desc->name] = builder.build();
+}
+
+void DebugPipelineLoader::set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) {
+    m_globals_provider = std::move(globals_provider);
+
+    for (auto& pipeline_file : m_pipeline_files) {
+        load_descriptor_set_layouts(pipeline_file.get());
+    }
+}
 } // namespace vke
