@@ -2,8 +2,9 @@
 
 #include "enum_parsers.hpp"
 
+#include <vke/util.hpp>
 
-namespace vke{
+namespace vke {
 
 void PipelineDescription::load(const json& json) {
     name         = json.value("name", "");
@@ -30,12 +31,25 @@ void PipelineDescription::load(const json& json) {
     depth_op      = parse_depth_op(json.value("depth_op", "LESS_OR_EQUAL"));
 }
 
-
 void PipelineFile::load(const json& json) {
     for (const auto& pipeline : json.value("pipelines", json::array())) {
-        PipelineDescription description;
-        description.load(pipeline);
+        auto description = std::make_shared<PipelineDescription>();
+        description->load(pipeline);
         pipelines.push_back(std::move(description));
     }
+
+    for (const auto& mpipeline : json.value("multi_pipelines", json::array())) {
+        MultiPipelineDescription description;
+        description.load(mpipeline);
+        multi_pipelines.push_back(std::move(description));
+    }
+}
+
+void MultiPipelineDescription::load(const json& top) {
+    name = top.value("name", std::string());
+
+    pipelines = map_vec(top.value("pipelines", json::array()), [&](const json& j) {
+        return j.get<std::string>();
+    });
 }
 } // namespace vke

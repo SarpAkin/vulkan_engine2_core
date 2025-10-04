@@ -20,7 +20,8 @@ public:
     void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override { m_globals_provider = std::move(globals_provider); }
     PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_globals_provider.get(); }
 
-    const PipelineDescription* get_pipeline_description(const char* pipeline_name)override;
+    const PipelineDescription* get_pipeline_description(const char* pipeline_name) override;
+    std::vector<std::shared_ptr<const PipelineFile>> get_pipeline_files() override {return m_pipeline_files;}
 
 private:
     void load_descriptions();
@@ -31,10 +32,11 @@ private:
     std::string resolve_shader_lib_path(const std::string& path);
 
 private:
-    std::unordered_map<std::string, std::unique_ptr<PipelineDescription>> m_pipelines_descriptions;
+    std::unordered_map<std::string, std::shared_ptr<const PipelineDescription>> m_pipelines_descriptions;
 
     std::vector<std::string> m_pipeline_search_paths;
     std::vector<fs::path> m_shader_lib_paths;
+    std::vector<std::shared_ptr<const vke::PipelineFile>> m_pipeline_files;
 
     std::shared_ptr<PipelineGlobalsProvider> m_globals_provider;
 };

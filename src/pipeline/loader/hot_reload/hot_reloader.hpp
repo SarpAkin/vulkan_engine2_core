@@ -28,6 +28,7 @@ public:
     PipelineGlobalsProvider* get_pipeline_globals_provider() override { return m_pipeline_loader->get_pipeline_globals_provider(); }
     void set_pipeline_globals_provider(std::shared_ptr<PipelineGlobalsProvider> globals_provider) override;
     const PipelineDescription* get_pipeline_description(const char* pipeline_name) override { return m_pipeline_loader->get_pipeline_description(pipeline_name); }
+    std::vector<std::shared_ptr<const PipelineFile>> get_pipeline_files() override { return m_pipeline_loader->get_pipeline_files(); }
 
     void remove_watched_pipeline(ReloadablePipeline* pipeline);
 
