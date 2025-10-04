@@ -100,6 +100,7 @@ public:
     void dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z);
 
     void fill_buffer(vke::IBufferSpan& buffer_span, u32 data);
+    void clear_image(vke::Image* image, VkImageLayout layout, std::span<const VkClearValue> clear_values, std::span<const VkImageSubresourceRange> image_subresource_range);
 
     void pipeline_barrier(const PipelineBarrierArgs& args);
 

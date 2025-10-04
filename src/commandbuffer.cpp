@@ -6,7 +6,9 @@
 #include <vulkan/vulkan_core.h>
 
 #include "buffer.hpp"
+#include "command_pool.hpp"
 #include "fwd.hpp"
+#include "image.hpp"
 #include "isubpass.hpp"
 #include "pipeline/ipipeline.hpp"
 #include "renderpass/renderpass.hpp"
@@ -15,7 +17,6 @@
 #include "vk_resource.hpp"
 #include "vkutil.hpp"
 #include "vulkan_context.hpp"
-#include "command_pool.hpp"
 
 namespace vke {
 
@@ -42,21 +43,21 @@ CommandBuffer::CommandBuffer(bool is_primary, int queue_index) {
     m_is_primary = is_primary;
 }
 
-CommandBuffer::CommandBuffer(CommandPool* pool, VkCommandBuffer cmd,bool is_primary) {
+CommandBuffer::CommandBuffer(CommandPool* pool, VkCommandBuffer cmd, bool is_primary) {
     m_dt = &get_dispatch_table();
 
     m_vke_cmd_pool = pool;
-    m_cmd = cmd;
-    m_is_primary = is_primary;
+    m_cmd          = cmd;
+    m_is_primary   = is_primary;
 }
 
 CommandBuffer::~CommandBuffer() {
     if (m_is_external) return;
 
-    if(m_vke_cmd_pool){
-        m_dt->vkResetCommandBuffer(m_cmd,0);
+    if (m_vke_cmd_pool) {
+        m_dt->vkResetCommandBuffer(m_cmd, 0);
         m_vke_cmd_pool->push_recycled_cmd(m_cmd, m_is_primary);
-    }else{
+    } else {
         m_dt->vkDestroyCommandPool(device(), m_cmd_pool, nullptr);
     }
 }
@@ -130,7 +131,6 @@ void CommandBuffer::bind_vertex_buffer(std::span<const std::unique_ptr<IBufferSp
 
     m_dt->vkCmdBindVertexBuffers(handle(), 0, buffer.size(), handles.data(), offsets.data());
 }
-
 
 void CommandBuffer::bind_vertex_buffer(const std::span<const IBufferSpan*>& buffer) {
     auto handles = MAP_VEC_ALLOCA(buffer, [](const IBufferSpan* buffer) { return buffer->handle(); });
@@ -301,5 +301,19 @@ void CommandBuffer::flush_postponed_descriptor_sets() {
 }
 void CommandBuffer::fill_buffer(vke::IBufferSpan& buffer_span, u32 data) {
     m_dt->vkCmdFillBuffer(handle(), buffer_span.handle(), buffer_span.byte_offset(), buffer_span.byte_size(), data);
+}
+
+void CommandBuffer::clear_image(vke::Image* image, VkImageLayout layout, std::span<const VkClearValue> clear_values, std::span<const VkImageSubresourceRange> image_subresource_range) {
+    assert(clear_values.size() == image_subresource_range.size());
+
+    if (is_depth_format(image->format())) {
+        auto cv2 = vke::map_vec2small_vec(clear_values, [&](const VkClearValue& clear_value) { return clear_value.depthStencil; });
+
+        m_dt->vkCmdClearDepthStencilImage(m_cmd, image->handle(), layout, cv2.data(), clear_values.size(), image_subresource_range.data());
+    } else {
+        auto cv2 = vke::map_vec2small_vec(clear_values, [&](const VkClearValue& clear_value) { return clear_value.color; });
+
+        m_dt->vkCmdClearColorImage(m_cmd, image->handle(), layout, cv2.data(), clear_values.size(), image_subresource_range.data());
+    }
 }
 } // namespace vke
