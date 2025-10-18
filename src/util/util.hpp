@@ -213,8 +213,8 @@ T fold(auto&& container, T initial, auto&& function) {
     return initial;
 }
 
-template <class K, class T>
-std::optional<T> at(const std::unordered_map<K, T>& map, const K& key) {
+template <class K, class T,class ...Args>
+std::optional<T> at(const std::unordered_map<K, T,Args...>& map, const K& key) {
     auto it = map.find(key);
     if (it != map.end()) {
         return std::make_optional(it->second);
@@ -223,8 +223,8 @@ std::optional<T> at(const std::unordered_map<K, T>& map, const K& key) {
     }
 }
 
-template <class K, class T>
-const T* at_ptr(const std::unordered_map<K, T>& map, const K& key) {
+template <class K, class T, class... Args>
+const T* at_ptr(const std::unordered_map<K, T, Args...>& map, const K& key) {
     auto it = map.find(key);
     if (it != map.end()) {
         return &it->second;
@@ -233,8 +233,8 @@ const T* at_ptr(const std::unordered_map<K, T>& map, const K& key) {
     }
 }
 
-template <class K, class T>
-T* at_ptr(std::unordered_map<K, T>& map, const K& key) {
+template <class K, class T, class... Args>
+T* at_ptr(std::unordered_map<K, T, Args...>& map, const K& key) {
     auto it = map.find(key);
     if (it != map.end()) {
         return &it->second;
