@@ -8,20 +8,73 @@
 
 namespace vke {
 
-template <class TValue, usize Dim>
-class MDArray {
+namespace impl {
+
+// Helper to check if all elements of an array are zero
+template <std::size_t Dim, std::array<u32, Dim> Extends>
+struct is_all_zero {
+    static constexpr bool value = []() {
+        for (usize i = 0; i < Dim; ++i) {
+            if (Extends[i] != 0) return false;
+        }
+        return true;
+    }();
+};
+
+// Primary template (unused, will rely on specializations)
+template <usize Dim, std::array<u32, Dim> Extends = std::array<u32, Dim>{0}, typename Enable = void>
+class MDArrayBase;
+
+// **Dynamic case**: all Extends are zero
+template <usize Dim, std::array<u32, Dim> Extends>
+class MDArrayBase<Dim, Extends, std::enable_if_t<is_all_zero<Dim, Extends>::value>> {
+public:
+    MDArrayBase() {
+        m_extend.fill(0);
+    }
+
+    std::array<u32, Dim> extend() const { return m_extend; }
+
+    void set_extend(const std::array<u32, Dim>& new_extends) { m_extend = new_extends; }
+
 private:
-    constexpr static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+    std::array<u32, Dim> m_extend;
+};
+
+// **Static case**: at least one Extend is non-zero
+template <usize Dim, std::array<u32, Dim> Extends>
+class MDArrayBase<Dim, Extends, std::enable_if_t<!is_all_zero<Dim, Extends>::value>> {
+protected:
+    void set_extend(const std::array<u32, Dim>& new_extends) { assert(Extends == new_extends && "can't set the extends of and staticly sized MDArray to anything other than the Extends"); }
+
+public:
+    constexpr std::array<u32, Dim> extend() const { return Extends; }
+    MDArrayBase() {}
+};
+
+} // namespace impl
+
+template <class TValue, usize Dim, std::array<u32, Dim> Extends = std::array<u32, Dim>{0}>
+class MDArray : private impl::MDArrayBase<Dim, Extends> {
+private:
+    constexpr static size_t INVALID_INDEX      = std::numeric_limits<size_t>::max();
+    constexpr static bool IS_DYNAMICLY_INDEXED = impl::is_all_zero<Dim, Extends>::value;
+
+    using impl::MDArrayBase<Dim, Extends>::set_extend;
 
 public:
     using key_type       = std::array<u32, Dim>;
     using value_type     = TValue;
     using allocator_type = std::allocator<value_type>;
+    using impl::MDArrayBase<Dim, Extends>::extend;
 
 #pragma region ctor/dtor
 public: // c'tors / d'tors
     MDArray(const key_type& size, const TValue& initial_value = TValue()) {
-        m_sizes          = size;
+        // will assert if size is different than Extends in case it the MDArray isn't dynamicly sized
+        set_extend(size);
+
+        // m_sizes          = size;
         size_t flat_size = calculate_flat_size();
 
         m_data = _allocate<TValue>(flat_size);
@@ -32,12 +85,12 @@ public: // c'tors / d'tors
     }
 
     MDArray() {
-        m_data  = nullptr;
-        m_sizes = std::array<u32, Dim>(0);
+        m_data = nullptr;
+        if constexpr (IS_DYNAMICLY_INDEXED) set_extend(std::array<u32, Dim>(0));
     }
 
     MDArray(const MDArray& other) {
-        m_sizes          = other.m_sizes;
+        set_extend(other.extend);
         size_t flat_size = calculate_flat_size();
 
         m_data = _allocate<TValue>(flat_size);
@@ -51,7 +104,7 @@ public: // c'tors / d'tors
 
         _destroy();
 
-        m_sizes          = other.m_sizes;
+        set_extend(other.extend);
         size_t flat_size = calculate_flat_size();
 
         m_data = _allocate<TValue>(flat_size);
@@ -62,8 +115,8 @@ public: // c'tors / d'tors
     }
 
     MDArray(MDArray&& other) noexcept {
-        m_sizes = other.m_sizes;
-        m_data  = other.m_data;
+        set_extend(other.extend);
+        m_data = other.m_data;
 
         other.m_data = nullptr;
         other.m_sizes.fill(0);
@@ -74,8 +127,8 @@ public: // c'tors / d'tors
 
         _destroy();
 
-        m_sizes = other.m_sizes;
-        m_data  = other.m_data;
+        set_extend(other.extend);
+        m_data = other.m_data;
 
         other.m_data = nullptr;
         other.m_sizes.fill(0);
@@ -118,6 +171,16 @@ public: // util
         }
     }
 
+    key_type size() const {
+        if constexpr (IS_DYNAMICLY_INDEXED) {
+            if (!m_data) assert(extend == key_type(0));
+            
+            return extend();
+        } else {
+            return m_data ? extend() : key_type(0);
+        }
+    }
+
 private:
     void _destroy() {
         if (m_data == nullptr) return;
@@ -134,7 +197,7 @@ private:
     size_t convert_to_flat_index(const key_type& md_index) const {
         size_t final_index = 0;
         for (int i = 0; i < Dim; i++) {
-            final_index = final_index * m_sizes[i] + md_index[i];
+            final_index = final_index * extend()[i] + md_index[i];
         }
         return final_index;
     }
@@ -142,9 +205,9 @@ private:
     size_t convert_to_flat_index_checked(const key_type& md_index) const {
         size_t final_index = 0;
         for (int i = 0; i < Dim; i++) {
-            if (md_index >= m_sizes[i]) return INVALID_INDEX;
+            if (md_index[i] >= extend()[i]) return INVALID_INDEX;
 
-            final_index = final_index * m_sizes[i] + md_index[i];
+            final_index = final_index * extend()[i] + md_index[i];
         }
         return final_index;
     }
@@ -158,7 +221,7 @@ private:
     size_t calculate_flat_size() const {
         size_t total_size = 1;
         for (int i = 0; i < Dim; i++) {
-            total_size *= m_sizes[i];
+            total_size *= extend()[i];
         }
         return total_size;
     }
@@ -172,7 +235,7 @@ private:
     template <size_t N, bool is_const = false>
     void _indexed_foreach(auto&& f, size_t accumulated_flat_index, key_type& md_indices) {
         u32& i = md_indices[N];
-        for (i = 0; i < m_sizes[N]; i++) {
+        for (i = 0; i < extend()[N]; i++) {
             size_t flat_index = accumulated_flat_index + i;
             if constexpr (N == Dim) {
                 if constexpr (is_const) {
@@ -204,7 +267,6 @@ private: // allocator
 
 private:
     TValue* m_data = nullptr;
-    key_type m_sizes;
 };
 
 } // namespace vke
