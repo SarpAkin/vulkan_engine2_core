@@ -192,7 +192,7 @@ std::optional<uint32_t> find_present_queue(vk::detail::DispatchLoaderDynamic* lo
 }
 
 DeviceResults create_device(const ContextConfig& config, VkInstance instance, vk::detail::DispatchLoaderDynamic* loader, VkPhysicalDevice physical_device) {
-    uint32_t graphics_family, present_family;
+    uint32_t graphics_family = -1, present_family = -1;
 
     graphics_family = find_queue_family(loader, physical_device, VK_QUEUE_GRAPHICS_BIT);
 
@@ -236,7 +236,7 @@ DeviceResults create_device(const ContextConfig& config, VkInstance instance, vk
     auto features1_1  = config.features1_1;
     features1_1.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
 
-    VkPhysicalDeviceFeatures2 features1_0{
+    VkPhysicalDeviceFeatures2 features1_0 = {
         .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
         .features = config.features1_0,
     };
@@ -255,7 +255,7 @@ DeviceResults create_device(const ContextConfig& config, VkInstance instance, vk
     features1_2.pNext = &features1_3;
     features1_3.pNext = nullptr;
 
-    VkDevice device;
+    VkDevice device = nullptr;
     VK_CHECK(loader->vkCreateDevice(physical_device, &device_ci, nullptr, &device));
 
     VkQueue graphics_queue, present_queue;

@@ -28,6 +28,7 @@ bool is_depth_format(VkFormat format);
         if (__vkchek__result != VK_SUCCESS) {                                                         \
             fprintf(stderr, "[Vulkan Error]: %s\n", vke::vk_result_string(__vkchek__result).c_str()); \
             assert(0);                                                                                \
+            abort();                                                                                  \
         }                                                                                             \
     }
 
@@ -36,11 +37,10 @@ inline bool is_equal(const VkExtent2D& a, const VkExtent2D& b) {
     return (a.width == b.width) && (a.height == b.height);
 }
 
-void chain_up(auto* base,auto* next){
+void chain_up(auto* base, auto* next) {
     assert(next->pNext == nullptr && "next shouldn't have a next");
     next->pNext = base->pNext;
     base->pNext = static_cast<const void*>(next);
 }
-
 
 } // namespace vke
