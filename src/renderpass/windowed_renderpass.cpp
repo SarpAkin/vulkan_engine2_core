@@ -16,6 +16,7 @@ namespace vke {
 
 WindowRenderPass::WindowRenderPass(Window* window, bool has_depth) {
     auto* surface = window->surface(); 
+    surface->initialize_if_not_initialized();
 
     assert(surface->is_initialized() && "surface must be initialized");
 

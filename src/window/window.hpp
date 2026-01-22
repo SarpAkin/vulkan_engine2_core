@@ -27,8 +27,9 @@ public:
 
     inline Surface* surface() { return m_surface.get(); }
 
-    virtual void init_surface() = 0;
+    virtual void init_surface(VulkanContext* ctx) = 0;
     virtual void poll_events() = 0;
+    virtual std::vector<const char*> get_instance_extensions() =0;
 
     bool is_key_pressed(u32 keycode) { return m_key_states[keycode]; };
     const MouseInputData& get_mouse_input() const { return m_mouse_input; }

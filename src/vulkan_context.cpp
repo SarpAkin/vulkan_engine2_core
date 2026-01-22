@@ -14,6 +14,9 @@
 #include "util/util.hpp"
 #include "vkutil.hpp"
 
+#include "init/initialization_util.hpp"
+#include "window/window.hpp"
+
 namespace vke {
 
 struct VulkanContext::Handles {
@@ -45,6 +48,9 @@ VulkanContext::VulkanContext(VkInstance instance, VkPhysicalDevice pdevice, VkDe
     m_physical_device = pdevice;
 
     query_device_info();
+
+    vk::CommandBuffer cmd;
+    constexpr uint32_t size = sizeof(cmd);
 
     ContextConfig config{
         .device_memory_addres = true,
@@ -101,42 +107,44 @@ void validate_config(ContextConfig& config) {
 
 void VulkanContext::init_context(const ContextConfig& _config) {
     ContextConfig config = _config;
+#ifndef NDEBUG
+    config.enable_validation_layers = true;
+#endif
+    if(config.enable_validation_layers && config.validation_callback == nullptr){
+        config.validation_callback = debug_callback;
+    }
+
+    if(config.window) config.window_enabled = true;
+
+    if(config.window_enabled){
+        config.device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        config.instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+        auto window_extensions = config.window->get_instance_extensions();
+        config.instance_extensions.insert(config.instance_extensions.end(),window_extensions.begin(),window_extensions.end());
+    }
+
+
     validate_config(config);
 
     m_handles = std::make_unique<Handles>();
     load_dispatch_table(*m_handles, false);
 
-    auto builder = vkb::InstanceBuilder(m_handles->dispatch_table.vkGetInstanceProcAddr);
 
-    builder.set_app_name(config.app_name);
-    builder.require_api_version(config.vk_version_major, config.vk_version_minor, config.vk_version_patch);
+    m_instance = create_instance(config, &m_handles->dispatch_table);
+    
+    m_handles->instance = m_instance;
+    load_dispatch_table(*m_handles, true);
 
-#ifndef NDEBUG
-    builder.request_validation_layers(true);
-    builder.set_debug_callback(debug_callback);
-#endif
+    if(config.window){
+        config.window->init_surface(this);
+    }
 
-    auto vkb_instance = builder.build().value();
+    m_physical_device = pick_physical_device(config, m_instance, &m_handles->dispatch_table);
 
-    m_instance = vkb_instance.instance;
 
-    vkb::PhysicalDeviceSelector selector(vkb_instance);
-    selector.set_minimum_version(config.vk_version_major, config.vk_version_minor);
-    // selector.set_surface(config.window->surface()->get_surface());
-    selector.defer_surface_initialization();
+    auto device_result = create_device(config, m_instance, &m_handles->dispatch_table, m_physical_device);
 
-    selector.set_required_features(config.features1_0);
-    selector.set_required_features_11(config.features1_1);
-    selector.set_required_features_12(config.features1_2);
-    selector.set_required_features_13(config.features1_3);
-
-    vkb::PhysicalDevice vkb_pdevice = selector.select().value();
-
-    m_physical_device = vkb_pdevice.physical_device;
-
-    vkb::DeviceBuilder vkb_device_builder(vkb_pdevice);
-
-    m_device = vkb_device_builder.build()->device;
+    m_device = device_result.device;
 
     m_handles->instance        = m_instance;
     m_handles->device          = m_device;

@@ -35,4 +35,12 @@ namespace vke {
 inline bool is_equal(const VkExtent2D& a, const VkExtent2D& b) {
     return (a.width == b.width) && (a.height == b.height);
 }
+
+void chain_up(auto* base,auto* next){
+    assert(next->pNext == nullptr && "next shouldn't have a next");
+    next->pNext = base->pNext;
+    base->pNext = static_cast<const void*>(next);
+}
+
+
 } // namespace vke
