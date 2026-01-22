@@ -61,7 +61,7 @@ protected:
     PipelineLayoutBuilder* m_layout_builder;
     std::unique_ptr<PipelineLayoutBuilder> m_owned_builder;
     VkPipelineCache m_pipeline_cache = VK_NULL_HANDLE;
-    VkShaderStageFlags m_shader_stages;
+    VkShaderStageFlags m_shader_stages = 0;
     ArenaAllocator m_arena;
 };
 
