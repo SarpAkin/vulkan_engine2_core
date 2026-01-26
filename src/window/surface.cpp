@@ -1,11 +1,12 @@
 #include "surface.hpp"
 
-#include <VkBootstrap.h>
 #include <cassert>
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
 #include "../vulkan_context.hpp"
+
+#include "../init/create_swapchain.hpp"
 
 #include "../semaphore.hpp"
 #include "../util/util.hpp"
@@ -14,27 +15,26 @@
 
 namespace vke {
 void Surface::init_swapchain() {
-    vkb::Swapchain vkb_swapchain =
-        vkb::SwapchainBuilder(vke::VulkanContext::get_context()->get_physical_device(), device(), m_surface)
-            .use_default_format_selection()
-            // use vsync present mode
-            .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-            .set_desired_extent(m_window->width(), m_window->height())
-            .set_old_swapchain(m_swapchain)
-            .build()
-            .value();
+    auto new_sc = create_swapchain(VulkanContext::get_context(), SwapChainArgs{
+        .old_swapchain = m_swapchain,
+        .width = m_window->width(),
+        .height = m_window->height(),
+        .present_mode = VK_PRESENT_MODE_FIFO_KHR,
+        .surface = m_surface,
+    });
+
 
     if (m_swapchain) {
         destroy_swapchain();
     }
 
-    m_width  = vkb_swapchain.extent.width;
-    m_height = vkb_swapchain.extent.height;
+    m_width  = new_sc.extend.width;
+    m_height = new_sc.extend.height;
 
-    m_swapchain_image_format = vkb_swapchain.image_format;
-    m_swapchain              = vkb_swapchain.swapchain;
-    m_swapchain_image_views  = vkb_swapchain.get_image_views().value();
-    m_swapchain_images       = vkb_swapchain.get_images().value();
+    m_swapchain_image_format = new_sc.format;
+    m_swapchain              = new_sc.swapchain;
+    m_swapchain_image_views  = new_sc.views;
+    m_swapchain_images       = new_sc.images;
 
     m_prepare_semaphores.resize(m_swapchain_images.size());
     m_wait_semaphores.resize(m_swapchain_images.size());
@@ -154,6 +154,13 @@ void Surface::recrate_swapchain() {
 Surface::Surface(VkSurfaceKHR surface, Window* window) {
     m_surface = surface;
     m_window  = window;
-    init_swapchain();
+    // init_swapchain();
+}
+
+void Surface::initialize_if_not_initialized() {
+    if(m_swapchain == nullptr){
+        init_swapchain();
+    }
+
 }
 } // namespace vke

@@ -50,6 +50,7 @@ public:
 
     VkQueue get_graphics_queue() { return m_graphics_queue; }
     u32 get_graphics_queue_family() { return m_graphics_queue_family; }
+    u32 get_present_queue_family() {return 0;}
 
     DeviceInfo* get_device_info() const { return m_device_info.get(); }
 
@@ -95,14 +96,22 @@ struct ContextConfig {
     u32 vk_version_major      = 1;
     u32 vk_version_minor      = 3;
     u32 vk_version_patch      = 0;
-    bool window               = true;
+    bool window_enabled               = true;
     bool device_memory_addres = false;
-    // Window* window       = nullptr;
+    bool enable_validation_layers = false;
+
+    PFN_vkDebugUtilsMessengerCallbackEXT validation_callback= nullptr;
+    void* validation_callback_user_data = nullptr;
+    
+    Window* window       = nullptr;
     VkPhysicalDeviceFeatures features1_0                       = {};
     VkPhysicalDeviceVulkan11Features features1_1               = {};
     VkPhysicalDeviceVulkan12Features features1_2               = {};
     VkPhysicalDeviceVulkan13Features features1_3               = {};
     VkPhysicalDeviceMeshShaderFeaturesEXT features_mesh_shader = {};
+
+    std::vector<const char*> instance_extensions;
+    std::vector<const char*> device_extensions;
 };
 
 } // namespace vke

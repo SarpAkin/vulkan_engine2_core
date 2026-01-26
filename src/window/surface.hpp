@@ -40,6 +40,8 @@ public: // getters
 
     bool is_initialized() const { return m_swapchain != nullptr; }
 
+    void initialize_if_not_initialized();
+
     // must be called after device initialization
     void init_swapchain();
 
@@ -57,8 +59,8 @@ private:
     void destroy_swapchain();
 
 private:
-    Window* m_window;
-    VkSurfaceKHR m_surface;
+    Window* m_window = nullptr;
+    VkSurfaceKHR m_surface = nullptr;
     VkFormat m_swapchain_image_format;
     VkSwapchainKHR m_swapchain = nullptr;
     std::vector<VkImage> m_swapchain_images;
