@@ -98,7 +98,7 @@ struct ContextConfig {
     u32 vk_version_patch      = 0;
     bool window_enabled               = true;
     bool device_memory_addres = false;
-    bool enable_validation_layers = true;
+    bool enable_validation_layers = false;
 
     PFN_vkDebugUtilsMessengerCallbackEXT validation_callback= nullptr;
     void* validation_callback_user_data = nullptr;
