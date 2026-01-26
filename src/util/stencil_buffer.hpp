@@ -43,7 +43,12 @@ private:
     // std::unordered_map<Buffer*, vke::SlimVec<VkBufferCopy>> m_copies;
 
     // pair as dst buffer,src buffer
-    std::unordered_map<std::pair<IBuffer*, IBuffer*>, vke::SlimVec<VkBufferCopy>> m_copies;
+    struct CopyDetailsData {
+        vke::SlimVec<VkBufferCopy> copies;
+        u32 begin = UINT32_MAX, end = 0;
+    };
+
+    std::unordered_map<std::pair<IBuffer*, IBuffer*>, CopyDetailsData> m_copy_details;
     std::vector<RCResource<vke::Buffer>> m_buffers;
     u32 m_top             = 0;
     u32 m_buffer_capacity = 0;

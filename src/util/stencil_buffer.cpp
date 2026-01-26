@@ -45,21 +45,46 @@ void StencilBuffer::copy_data(BufferSpan destination, std::span<const u8> data) 
     auto allocation = allocate(data.size());
     memcpy(allocation.mapped_data_bytes().data(), data.data(), data.size_bytes());
 
-    m_copies[std::make_pair(destination.vke_buffer(), allocation.vke_buffer())].push_back(VkBufferCopy{
+    auto& details       = m_copy_details[std::make_pair(destination.vke_buffer(), allocation.vke_buffer())];
+    u32 dst_byte_offset = static_cast<u32>(destination.byte_offset());
+    u32 dst_byte_size   = data.size_bytes();
+
+    details.begin = std::min(details.begin, dst_byte_offset);
+    details.end   = std::max(details.end, dst_byte_offset + dst_byte_size);
+    details.copies.push_back(VkBufferCopy{
         .srcOffset = allocation.byte_offset(),
-        .dstOffset = destination.byte_offset(),
-        .size      = data.size_bytes(),
+        .dstOffset = dst_byte_offset,
+        .size      = dst_byte_size,
     });
 }
 
 void StencilBuffer::flush_copies(vke::CommandBuffer& cmd) {
-    for (auto& [buffer_pair, copies] : m_copies) {
+    vke::SmallVec<VkBufferMemoryBarrier, 4> barriers;
+
+    for (auto& [buffer_pair, copies] : m_copy_details) {
         auto [dst_buffer, src_buffer] = buffer_pair;
-        cmd.copy_buffer(src_buffer, dst_buffer, copies);
+
+        
+        cmd.copy_buffer(src_buffer, dst_buffer, copies.copies);
+
+        barriers.push_back({
+            .sType         = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_UNIFORM_READ_BIT,
+            .buffer        = dst_buffer->handle(),
+            .offset        = copies.begin,
+            .size          = copies.end - copies.begin,
+        });
     }
 
-    for(auto buffer : m_buffers){
+    cmd.pipeline_barrier({
+        .src_stage_mask         = VK_PIPELINE_STAGE_TRANSFER_BIT,
+        .dst_stage_mask         = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        .buffer_memory_barriers = barriers,
+    });
+
+    for (auto buffer : m_buffers) {
         cmd.add_execution_dependency(buffer->get_reference());
-    }    
+    }
 }
 } // namespace vke
