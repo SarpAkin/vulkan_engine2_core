@@ -6,7 +6,6 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
-#include <VkBootstrap.h>
 
 #include "builders/descriptor_set_layout_builder.hpp"
 #include "commandbuffer.hpp"

@@ -1,6 +1,5 @@
 #include "surface.hpp"
 
-#include <VkBootstrap.h>
 #include <cassert>
 #include <memory>
 #include <vulkan/vulkan_core.h>
