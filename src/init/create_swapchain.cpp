@@ -22,8 +22,19 @@ std::vector<VkSurfaceFormatKHR> get_swapchain_formats(VulkanContext* ctx, VkSurf
     return formats;
 }
 
-VkSurfaceFormatKHR choose_swap_surface_format(std::span<const VkSurfaceFormatKHR> formats) {
+VkSurfaceFormatKHR choose_swapchain_surface_format(std::span<const VkSurfaceFormatKHR> formats, VkFormat preferred_format = VK_FORMAT_UNDEFINED) {
     assert(formats.size() > 0);
+
+    // for (auto& format : formats) {
+    //     auto format_str      = vk::to_string(vk::Format(format.format));
+    //     auto color_space_str = vk::to_string(vk::ColorSpaceKHR(format.colorSpace));
+        
+    //     printf("surface format available %s %s", format_str.c_str(), color_space_str.c_str());
+    // }
+
+    for (auto& format : formats) {
+        if (format.format == preferred_format) return format;
+    }
 
     return formats[0];
 }
@@ -41,7 +52,7 @@ SwapChainData create_swapchain(VulkanContext* ctx, const SwapChainArgs& swapchai
         swapchain_args.surface, &capabilities);)
 
     // 2. Select Surface Format (e.g., B8G8R8A8_SRGB)
-    VkSurfaceFormatKHR surface_format = choose_swap_surface_format(availableFormats);
+    VkSurfaceFormatKHR surface_format = choose_swapchain_surface_format(availableFormats);
 
     // 3. Set Extent based on SwapChainArgs
     VkExtent2D extent = {swapchain_args.width, swapchain_args.height};
