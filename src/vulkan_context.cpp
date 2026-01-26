@@ -6,7 +6,6 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
-
 #include "builders/descriptor_set_layout_builder.hpp"
 #include "commandbuffer.hpp"
 #include "fence.hpp"
@@ -87,12 +86,32 @@ VulkanContext::~VulkanContext() {
     }
 }
 
+const char* to_string_message_severity(VkDebugUtilsMessageSeverityFlagBitsEXT s) {
+    switch (s) {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: return "VERBOSE";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: return "ERROR";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: return "WARNING";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: return "INFO";
+    default: return "UNKNOWN";
+    }
+}
+const char* to_string_message_type(VkDebugUtilsMessageTypeFlagsEXT s) {
+    if (s == 7) return "General | Validation | Performance";
+    if (s == 6) return "Validation | Performance";
+    if (s == 5) return "General | Performance";
+    if (s == 4 /*VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT*/) return "Performance";
+    if (s == 3) return "General | Validation";
+    if (s == 2 /*VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT*/) return "Validation";
+    if (s == 1 /*VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT*/) return "General";
+    return "Unknown";
+}
+
 VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void*) {
-    auto ms = vkb::to_string_message_severity(messageSeverity);
-    auto mt = vkb::to_string_message_type(messageType);
+    auto ms = to_string_message_severity(messageSeverity);
+    auto mt = to_string_message_type(messageType);
     printf("[%s: %s]\n%s\n", ms, mt, pCallbackData->pMessage);
 
     return VK_FALSE; // Applications must return false here
@@ -109,37 +128,34 @@ void VulkanContext::init_context(const ContextConfig& _config) {
 #ifndef NDEBUG
     config.enable_validation_layers = true;
 #endif
-    if(config.enable_validation_layers && config.validation_callback == nullptr){
+    if (config.enable_validation_layers && config.validation_callback == nullptr) {
         config.validation_callback = debug_callback;
     }
 
-    if(config.window) config.window_enabled = true;
+    if (config.window) config.window_enabled = true;
 
-    if(config.window_enabled){
+    if (config.window_enabled) {
         config.device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         config.instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
         auto window_extensions = config.window->get_instance_extensions();
-        config.instance_extensions.insert(config.instance_extensions.end(),window_extensions.begin(),window_extensions.end());
+        config.instance_extensions.insert(config.instance_extensions.end(), window_extensions.begin(), window_extensions.end());
     }
-
 
     validate_config(config);
 
     m_handles = std::make_unique<Handles>();
     load_dispatch_table(*m_handles, false);
 
-
     m_instance = create_instance(config, &m_handles->dispatch_table);
-    
+
     m_handles->instance = m_instance;
     load_dispatch_table(*m_handles, true);
 
-    if(config.window){
+    if (config.window) {
         config.window->init_surface(this);
     }
 
     m_physical_device = pick_physical_device(config, m_instance, &m_handles->dispatch_table);
-
 
     auto device_result = create_device(config, m_instance, &m_handles->dispatch_table, m_physical_device);
 
