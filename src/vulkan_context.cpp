@@ -148,8 +148,8 @@ void VulkanContext::init_context(const ContextConfig& _config) {
 
     m_instance = create_instance(config, &m_handles->dispatch_table);
 
-    m_handles->instance = m_instance;
-    load_dispatch_table(*m_handles, true);
+    // m_handles->instance = m_instance;
+    // load_dispatch_table(*m_handles, true);
 
     if (config.window) {
         config.window->init_surface(this);

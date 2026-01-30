@@ -93,6 +93,12 @@ VkInstance create_instance(const ContextConfig& config, vk::detail::DispatchLoad
 
     VkInstance instance;
     VK_CHECK(loader->vkCreateInstance(&instance_ci, nullptr, &instance));
+
+    loader->init(vk::Instance(instance));
+
+    VkDebugUtilsMessengerEXT messenger;
+    VK_CHECK(loader->vkCreateDebugUtilsMessengerEXT(instance,&debug_ci,nullptr,&messenger));
+
     return instance;
 }
 
