@@ -18,6 +18,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <variant>
 
 #include "../common.hpp"
 #include "../fwd.hpp"
@@ -260,6 +261,15 @@ std::vector<T> merge_into_vector(auto&& a, auto&& b) {
     out.insert(out.end(), b.begin(), b.end());
     return out;
 }
+
+template<class... Ts> struct VisitOverload : Ts... { using Ts::operator()...; };
+template<class... Ts> VisitOverload(Ts...) -> VisitOverload<Ts...>;
+
+template<class Variant,class... Fns>
+auto visit(Variant&& variant,Fns&&... functions){
+    return std::visit(VisitOverload(std::forward<Fns>(functions)...),std::forward<Variant>(variant));
+}
+
 
 } // namespace vke
 
