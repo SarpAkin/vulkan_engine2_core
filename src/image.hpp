@@ -38,7 +38,7 @@ struct SubViewArgs {
     u32 base_layer;
     u32 layer_count    = 1;
     u32 base_miplevel  = 0;
-    u32 miplevel_count = UINT_MAX; // by default same as images miplevel count
+    u32 miplevel_count = std::numeric_limits<u32>::max(); // by default same as images miplevel count
     VkImageViewType view_type;
 };
 
